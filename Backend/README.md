@@ -432,3 +432,248 @@ or
 | `200 OK` | User logged out successfully |
 | `401 Unauthorized` | Missing or invalid authentication |
 | `500 Internal Server Error` | Unexpected server error |
+
+## Login Captain
+
+Authenticates an existing captain and returns a new authentication token.
+
+### Endpoint
+
+```http
+POST /api/captains/login
+```
+
+The server expects JSON in the request body:
+
+```http
+Content-Type: application/json
+```
+
+### Request Body
+
+```json
+{
+  "email": "ali.khan@example.com",
+  "password": "secret123"
+}
+```
+
+### Required Data
+
+| Field | Type | Requirements |
+| --- | --- | --- |
+| `email` | string | Required; must be a valid email address |
+| `password` | string | Required; at least 6 characters |
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "token": "jwt-token",
+  "captain": {
+    "_id": "captain-id",
+    "fullName": {
+      "firstName": "Ali",
+      "lastName": "Khan"
+    },
+    "email": "ali.khan@example.com",
+    "socketId": null,
+    "status": "inactive",
+    "vehicle": {
+      "color": "Black",
+      "plate": "ABC-123",
+      "capacity": 4,
+      "vehicleType": "car",
+      "location": {
+        "latitude": null,
+        "longitude": null
+      }
+    }
+  }
+}
+```
+
+The token expires after 24 hours, and the server also sets a `token` cookie on successful login.
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+Returned when the email is invalid or the password is shorter than 6 characters.
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "value": "invalid-email",
+      "msg": "Invalid Email",
+      "path": "email",
+      "location": "body"
+    }
+  ]
+}
+```
+
+### Invalid Credentials
+
+**Status: `401 Unauthorized`**
+
+Returned when the captain email does not exist or the password is incorrect.
+
+```json
+{
+  "message": "invalid email or password"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Login successful |
+| `400 Bad Request` | Request data failed validation |
+| `401 Unauthorized` | Invalid email or password |
+| `500 Internal Server Error` | Unexpected database or server error |
+
+## Get Captain Profile
+
+Retrieves the authenticated captain's profile information.
+
+### Endpoint
+
+```http
+GET /api/captains/profile
+```
+
+### Authentication
+
+This route requires a valid JWT token. The middleware accepts either:
+
+- a cookie named `token`
+- an `Authorization` header in the format:
+
+```http
+Authorization: Bearer <jwt-token>
+```
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "captain": {
+    "_id": "captain-id",
+    "fullName": {
+      "firstName": "Ali",
+      "lastName": "Khan"
+    },
+    "email": "ali.khan@example.com",
+    "socketId": null,
+    "status": "inactive",
+    "vehicle": {
+      "color": "Black",
+      "plate": "ABC-123",
+      "capacity": 4,
+      "vehicleType": "car",
+      "location": {
+        "latitude": null,
+        "longitude": null
+      }
+    }
+  }
+}
+```
+
+### Unauthorized Responses
+
+**Status: `401 Unauthorized`**
+
+Returned if the token is missing, invalid, expired, or already blacklisted.
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+or
+
+```json
+{
+  "message": "Invalid token"
+}
+```
+
+or
+
+```json
+{
+  "message": "Token is blacklisted"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Profile retrieved successfully |
+| `401 Unauthorized` | Missing or invalid authentication |
+| `500 Internal Server Error` | Unexpected server error |
+
+## Logout Captain
+
+Logs out the authenticated captain by invalidating the current token.
+
+### Endpoint
+
+```http
+GET /api/captains/logout
+```
+
+### Authentication
+
+This route requires a valid JWT token in the same way as `/api/captains/profile`.
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "message": "Captain logged out successfully"
+}
+```
+
+The server clears the `token` cookie and stores the token in the blacklist collection.
+
+### Unauthorized Responses
+
+**Status: `401 Unauthorized`**
+
+Returned if the token is missing, invalid, expired, or already blacklisted.
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+or
+
+```json
+{
+  "message": "Invalid token"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Captain logged out successfully |
+| `401 Unauthorized` | Missing or invalid authentication |
+| `500 Internal Server Error` | Unexpected server error |
