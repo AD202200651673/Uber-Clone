@@ -1,6 +1,16 @@
-import React, { createContext, useState } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 
-export const UserDataContext = createContext()
+export const UserDataContext = createContext(null)
+
+export const useUser = () => {
+    const context = useContext(UserDataContext)
+
+    if (!context) {
+        throw new Error('useUser must be used inside UserContext')
+    }
+
+    return context
+}
 
 
 const UserContext = ({ children }) => {
@@ -14,11 +24,9 @@ const UserContext = ({ children }) => {
     })
 
     return (
-        <div>
-            <UserDataContext.Provider value={{ user, setUser }}>
-                {children}
-            </UserDataContext.Provider>
-        </div>
+        <UserDataContext.Provider value={{ user, setUser }}>
+            {children}
+        </UserDataContext.Provider>
     )
 }
 
