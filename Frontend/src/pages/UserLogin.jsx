@@ -1,9 +1,8 @@
 import React from 'react'
+import AuthPage from './AuthPage'
 
 const UserLogin = () => {
-  return (
-    <div>UserLogin</div>
-  )
+  return <AuthPage mode="login" role="user" />
 }
 
 export default UserLogin

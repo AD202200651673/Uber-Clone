@@ -1,9 +1,8 @@
 import React from 'react'
+import AuthPage from './AuthPage'
 
 const CaptainLogin = () => {
-  return (
-    <div>CaptainLogin</div>
-  )
+  return <AuthPage mode="login" role="captain" />
 }
 
 export default CaptainLogin
