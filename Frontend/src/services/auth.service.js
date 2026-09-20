@@ -17,13 +17,43 @@ export const authService = {
     return data
   },
 
-  registerCaptain: async (payload) => {
-    const { data } = await axiosInstance.post(API_ENDPOINTS.captains.register, payload)
+  logoutUser: async () => {
+    const { data } = await axiosInstance.post(API_ENDPOINTS.users.logout)
+    return data
+  },
+
+  registerCaptain: async ({
+    firstName,
+    lastName,
+    email,
+    password,
+    vehicleColor,
+    vehiclePlate,
+    vehicleCapacity,
+    vehicleType,
+  }) => {
+    const { data } = await axiosInstance.post(API_ENDPOINTS.captains.register, {
+      fullName: { firstName, lastName },
+      email,
+      password,
+      vehicle: {
+        color: vehicleColor,
+        plate: vehiclePlate,
+        capacity: Number(vehicleCapacity),
+        vehicleType,
+      },
+    })
+
     return data
   },
 
   loginCaptain: async ({ email, password }) => {
     const { data } = await axiosInstance.post(API_ENDPOINTS.captains.login, { email, password })
+    return data
+  },
+
+  logoutCaptain: async () => {
+    const { data } = await axiosInstance.get(API_ENDPOINTS.captains.logout)
     return data
   },
 }

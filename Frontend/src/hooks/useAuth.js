@@ -6,13 +6,21 @@ export const useAuth = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const execute = async (request, onSuccess) => {
+  const execute = async (request, onSuccess, tokenType = 'user') => {
     setIsLoading(true)
     setError('')
 
     try {
       const data = await request()
-      if (data.token) tokenStorage.set(data.token)
+      if (data.token) {
+        if (tokenType === 'captain') {
+          tokenStorage.captain.set(data.token)
+          tokenStorage.user.clear()
+        } else {
+          tokenStorage.user.set(data.token)
+          tokenStorage.captain.clear()
+        }
+      }
       onSuccess?.(data)
       return data
     } catch (requestError) {
@@ -27,9 +35,9 @@ export const useAuth = () => {
     isLoading,
     error,
     setError,
-    registerUser: (payload, onSuccess) => execute(() => authService.registerUser(payload), onSuccess),
-    loginUser: (payload, onSuccess) => execute(() => authService.loginUser(payload), onSuccess),
-    registerCaptain: (payload, onSuccess) => execute(() => authService.registerCaptain(payload), onSuccess),
-    loginCaptain: (payload, onSuccess) => execute(() => authService.loginCaptain(payload), onSuccess),
+    registerUser: (payload, onSuccess) => execute(() => authService.registerUser(payload), onSuccess, 'user'),
+    loginUser: (payload, onSuccess) => execute(() => authService.loginUser(payload), onSuccess, 'user'),
+    registerCaptain: (payload, onSuccess) => execute(() => authService.registerCaptain(payload), onSuccess, 'captain'),
+    loginCaptain: (payload, onSuccess) => execute(() => authService.loginCaptain(payload), onSuccess, 'captain'),
   }
 }
