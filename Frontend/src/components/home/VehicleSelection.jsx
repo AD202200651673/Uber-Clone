@@ -31,7 +31,7 @@ const vehicleOptions = [
   },
 ]
 
-const VehicleSelection = ({ destination, onBack }) => {
+const VehicleSelection = ({ destination, onBack, onConfirm }) => {
   const [selectedVehicle, setSelectedVehicle] = useState('car')
 
   return (
@@ -87,6 +87,7 @@ const VehicleSelection = ({ destination, onBack }) => {
 
       <button
         type="button"
+        onClick={() => onConfirm?.(vehicleOptions.find((vehicle) => vehicle.id === selectedVehicle))}
         className="mt-10 h-12 w-full rounded-xl bg-black text-sm font-semibold text-white transition active:scale-[0.99]"
       >
         Confirm {vehicleOptions.find((vehicle) => vehicle.id === selectedVehicle)?.name}

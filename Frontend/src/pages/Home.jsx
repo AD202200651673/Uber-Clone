@@ -15,12 +15,18 @@ import {
 } from 'react-icons/fi'
 import SuggestionList from '../components/home/SuggestionList'
 import VehicleSelection from '../components/home/VehicleSelection'
+import ConfirmRide from '../components/home/ConfirmRide'
+import LookingForDriver from '../components/home/LookingFordriver'
+import WaitingForDriver from '../components/home/WaitingForDriver'
 import mapImage from '../assets/map.png'
 
 const Home = () => {
   const [pickup, setPickup] = useState('Current Location')
   const [destination, setDestination] = useState('')
   const [selectedDestination, setSelectedDestination] = useState('')
+  const [confirmedVehicle, setConfirmedVehicle] = useState(null)
+  const [isLookingForDriver, setIsLookingForDriver] = useState(false)
+  const [isWaitingForDriver, setIsWaitingForDriver] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
   const sheetRef = useRef(null)
   const dragStartY = useRef(0)
@@ -48,6 +54,17 @@ const Home = () => {
     return undefined
   }, [isExpanded])
 
+  useEffect(() => {
+    if (!isLookingForDriver) return undefined
+
+    const timer = window.setTimeout(() => {
+      setIsLookingForDriver(false)
+      setIsWaitingForDriver(true)
+    }, 2800)
+
+    return () => window.clearTimeout(timer)
+  }, [isLookingForDriver])
+
   const expandSheet = () => setIsExpanded(true)
   const collapseSheet = () => setIsExpanded(false)
 
@@ -59,7 +76,24 @@ const Home = () => {
 
   const handleChooseAnotherLocation = () => {
     setSelectedDestination('')
+    setConfirmedVehicle(null)
+    setIsLookingForDriver(false)
+    setIsWaitingForDriver(false)
     setDestination('')
+    setIsExpanded(true)
+  }
+
+  const handleVehicleConfirm = (vehicle) => {
+    setConfirmedVehicle(vehicle)
+    setIsExpanded(true)
+  }
+
+  const handleBackToVehicles = () => setConfirmedVehicle(null)
+
+  const handleConfirmRide = (vehicle) => {
+    setConfirmedVehicle(vehicle)
+    setIsLookingForDriver(true)
+    setIsWaitingForDriver(false)
     setIsExpanded(true)
   }
 
@@ -132,8 +166,38 @@ const Home = () => {
         <div className="flex w-full justify-center pt-3 pb-1"><div className="h-1.5 w-10 rounded-full bg-[#d7d2ce]" /></div>
         <div className="flex-1 overflow-y-auto px-4 pb-6">
           <div className="mb-3 flex items-center justify-between"><h2 className="text-[20px] font-bold tracking-[-0.02em]">Plan your trip</h2><button type="button" className="flex items-center gap-1 rounded-full bg-[#f3f1f0] px-3 py-1.5 text-[12px] font-semibold"><FiClock className="text-[13px]" /><span>Now</span><FiChevronDown className="text-[14px]" /></button></div>
-          {selectedDestination ? (
-            <VehicleSelection destination={selectedDestination} onBack={handleChooseAnotherLocation} />
+          {isWaitingForDriver ? (
+            <WaitingForDriver
+              pickup={pickup}
+              destination={selectedDestination}
+              vehicle={confirmedVehicle}
+              onBack={() => {
+                setIsWaitingForDriver(false)
+                setIsLookingForDriver(true)
+              }}
+              onCancel={handleChooseAnotherLocation}
+            />
+          ) : isLookingForDriver ? (
+            <LookingForDriver
+              pickup={pickup}
+              destination={selectedDestination}
+              vehicle={confirmedVehicle}
+              onBack={() => setIsLookingForDriver(false)}
+            />
+          ) : confirmedVehicle ? (
+            <ConfirmRide
+              pickup={pickup}
+              destination={selectedDestination}
+              vehicle={confirmedVehicle}
+              onBack={handleBackToVehicles}
+              onConfirm={handleConfirmRide}
+            />
+          ) : selectedDestination ? (
+            <VehicleSelection
+              destination={selectedDestination}
+              onBack={handleChooseAnotherLocation}
+              onConfirm={handleVehicleConfirm}
+            />
           ) : (
             <>
               <button type="button" onClick={() => (isExpanded ? collapseSheet() : expandSheet())} className="mb-3 flex w-full items-center justify-center rounded-[20px] bg-[#f3f1f0] py-2 text-sm font-medium">{isExpanded ? 'Collapse sheet' : 'Expand sheet'}</button>
