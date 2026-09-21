@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import {
   FiChevronDown,
@@ -21,6 +22,7 @@ import WaitingForDriver from '../components/home/WaitingForDriver'
 import mapImage from '../assets/map.png'
 
 const Home = () => {
+  const navigate = useNavigate()
   const [pickup, setPickup] = useState('Current Location')
   const [destination, setDestination] = useState('')
   const [selectedDestination, setSelectedDestination] = useState('')
@@ -176,6 +178,7 @@ const Home = () => {
                 setIsLookingForDriver(true)
               }}
               onCancel={handleChooseAnotherLocation}
+              onStartRide={() => navigate('/riding')}
             />
           ) : isLookingForDriver ? (
             <LookingForDriver

@@ -2,7 +2,7 @@ import React from 'react'
 import { FiArrowLeft, FiMessageSquare, FiPhone, FiStar } from 'react-icons/fi'
 import carImage from '../../assets/car.png'
 
-const WaitingForDriver = ({ pickup, destination, vehicle, onBack, onCancel }) => {
+const WaitingForDriver = ({ pickup, destination, vehicle, onBack, onCancel, onStartRide }) => {
   const rideVehicle = vehicle ?? {
     name: 'UberGo',
     price: '₹193.20',
@@ -84,6 +84,9 @@ const WaitingForDriver = ({ pickup, destination, vehicle, onBack, onCancel }) =>
       </div>
 
       <div style={{ marginTop: '8px' }} className="text-center">
+        <button type="button" onClick={onStartRide} className="mb-4 block w-full rounded-xl bg-black py-3 text-sm font-semibold text-white transition active:scale-[0.99]">
+          Start ride
+        </button>
         <button type="button" onClick={onCancel} className="text-sm font-semibold text-[#ba1a1a] transition hover:underline">
           Cancel ride
         </button>
