@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 const blacklistTokenModel = require("../models/blacklistToken.model.js");
 const captainModel = require('../models/captain.model.js')
 
-module.exports.authenticateUser = async (req, res, next) => {
+module.exports.authenticateUser = module.exports.authUser = async (req, res, next) => {
     const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
 
     if (!token) {

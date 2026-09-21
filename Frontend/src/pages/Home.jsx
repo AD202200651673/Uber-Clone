@@ -20,9 +20,26 @@ import ConfirmRide from '../components/home/ConfirmRide'
 import LookingForDriver from '../components/home/LookingFordriver'
 import WaitingForDriver from '../components/home/WaitingForDriver'
 import mapImage from '../assets/map.png'
+import { axiosInstance } from '../api/core/api'
 
 const Home = () => {
   const navigate = useNavigate()
+
+  // useEffect(() => {
+  //   // Test API call to maps get-coordinates
+  //   axiosInstance
+  //     .get('/api/maps/get-coordinates', {
+  //       params: {
+  //         address: 'sheryians coding school indrapur',
+  //       },
+  //     })
+  //     .then((res) => {
+  //       console.log('Coordinates response:', res.data)
+  //     })
+  //     .catch((err) => {
+  //       console.error('Coordinates error in browser:', err.response?.data || err.message)
+  //     })
+  // }, [])
   const [pickup, setPickup] = useState('Current Location')
   const [destination, setDestination] = useState('')
   const [selectedDestination, setSelectedDestination] = useState('')

@@ -677,3 +677,333 @@ or
 | `200 OK` | Captain logged out successfully |
 | `401 Unauthorized` | Missing or invalid authentication |
 | `500 Internal Server Error` | Unexpected server error |
+
+## Get Coordinates
+
+Retrieves latitude and longitude coordinates for a given address using the geocoding service.
+
+### Endpoint
+
+```http
+GET /api/maps/get-coordinates
+```
+
+### Authentication
+
+Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
+
+### Query Parameters
+
+| Parameter | Type | Requirements |
+| --- | --- | --- |
+| `address` | string | Required; at least 3 characters |
+
+### Example Request
+
+```http
+GET /api/maps/get-coordinates?address=Sheryians%20Coding%20School%20Bhopal
+```
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "ltd": 23.259933,
+  "lng": 77.412615
+}
+```
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "value": "ab",
+      "msg": "Address is required",
+      "path": "address",
+      "location": "query"
+    }
+  ]
+}
+```
+
+### Not Found Error
+
+**Status: `404 Not Found`**
+
+```json
+{
+  "message": "Coordinates not found"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Coordinates retrieved successfully |
+| `400 Bad Request` | Invalid query parameter (address missing or shorter than 3 characters) |
+| `401 Unauthorized` | Missing or invalid authentication |
+| `404 Not Found` | Coordinates could not be found for the given address |
+| `500 Internal Server Error` | Unexpected server error |
+
+## Get Distance and Time
+
+Calculates driving distance and estimated travel duration between two addresses.
+
+### Endpoint
+
+```http
+GET /api/maps/get-distance-time
+```
+
+### Authentication
+
+Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
+
+### Query Parameters
+
+| Parameter | Type | Requirements |
+| --- | --- | --- |
+| `origin` | string | Required; at least 3 characters |
+| `destination` | string | Required; at least 3 characters |
+
+### Example Request
+
+```http
+GET /api/maps/get-distance-time?origin=Bhopal%20Railway%20Station&destination=DB%20City%20Mall%20Bhopal
+```
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "distance": {
+    "text": "7.2 km",
+    "value": 7200
+  },
+  "duration": {
+    "text": "18 mins",
+    "value": 1080
+  }
+}
+```
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Origin is required",
+      "path": "origin",
+      "location": "query"
+    }
+  ]
+}
+```
+
+### Not Found Error
+
+**Status: `404 Not Found`**
+
+```json
+{
+  "message": "Distance time not found"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Distance and duration calculated successfully |
+| `400 Bad Request` | Missing or invalid query parameters |
+| `401 Unauthorized` | Missing or invalid authentication |
+| `404 Not Found` | Route or distance could not be determined |
+| `500 Internal Server Error` | Unexpected server error |
+
+## Get Address Suggestions
+
+Retrieves autocomplete location suggestions matching the search query.
+
+### Endpoint
+
+```http
+GET /api/maps/get-suggestions
+```
+
+### Authentication
+
+Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
+
+### Query Parameters
+
+| Parameter | Type | Requirements |
+| --- | --- | --- |
+| `address` | string | Required; at least 3 characters |
+
+### Example Request
+
+```http
+GET /api/maps/get-suggestions?address=Sheryians
+```
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+[
+  {
+    "name": "Sheryians Coding School, Indrapuri, Bhopal, Madhya Pradesh, India",
+    "coordinates": [77.4612, 23.2435]
+  },
+  {
+    "name": "Sheryians Coding School, MP Nagar, Bhopal, Madhya Pradesh, India",
+    "coordinates": [77.4321, 23.2312]
+  }
+]
+```
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Address is required",
+      "path": "address",
+      "location": "query"
+    }
+  ]
+}
+```
+
+### Not Found Error
+
+**Status: `404 Not Found`**
+
+```json
+{
+  "message": "Suggestions not found"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Suggestions retrieved successfully |
+| `400 Bad Request` | Query parameter invalid or too short |
+| `401 Unauthorized` | Missing or invalid authentication |
+| `404 Not Found` | No suggestions found |
+| `500 Internal Server Error` | Unexpected server error |
+
+## Create Ride
+
+Creates a new ride request for an authenticated user, calculates the fare based on pickup and destination distance/duration, and generates a 4-digit verification OTP.
+
+### Endpoint
+
+```http
+POST /api/rides/create
+```
+
+### Authentication
+
+Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
+
+### Request Headers
+
+```http
+Content-Type: application/json
+```
+
+### Request Body
+
+```json
+{
+  "pickup": "Sheryians Coding School, Indrapuri, Bhopal",
+  "destination": "DB City Mall, MP Nagar, Bhopal",
+  "vehicleType": "car"
+}
+```
+
+### Required Data
+
+| Field | Type | Requirements |
+| --- | --- | --- |
+| `pickup` | string | Required; pickup location address |
+| `destination` | string | Required; destination location address |
+| `vehicleType` | string | Required; must be one of: `car`, `motorcycle`, `auto` |
+
+### Success Response
+
+**Status: `201 Created`**
+
+```json
+{
+  "_id": "664fa1b2e5f3982a1c4b7890",
+  "user": "664fa0a1e5f3982a1c4b7888",
+  "pickup": "Sheryians Coding School, Indrapuri, Bhopal",
+  "destination": "DB City Mall, MP Nagar, Bhopal",
+  "fare": 185,
+  "status": "pending",
+  "createdAt": "2026-09-21T18:45:00.000Z",
+  "updatedAt": "2026-09-21T18:45:00.000Z"
+}
+```
+
+*(Note: The `otp` field is generated and stored in the database with `select: false` so it is not leaked in public responses).*
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Invalid vehicle type",
+      "path": "vehicleType",
+      "location": "body"
+    }
+  ]
+}
+```
+
+### Unauthorized Error
+
+**Status: `401 Unauthorized`**
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `201 Created` | Ride created successfully |
+| `400 Bad Request` | Missing or invalid request body fields |
+| `401 Unauthorized` | Missing or invalid authentication token |
+| `500 Internal Server Error` | Unexpected server or database error |
+
