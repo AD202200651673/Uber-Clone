@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiMenu,
@@ -7,6 +7,7 @@ import {
   FiUser
 } from "react-icons/fi";
 import { useCaptain } from "../context/CaptainContext";
+import { axiosInstance } from "../api/core/api";
 import CaptainDetails from "../components/captain/CaptainDetails";
 import RidePopUp from "../components/captain/RidePopUp";
 import ConfirmRidePopUp from "../components/captain/ConfirmRidePopUp";
@@ -14,10 +15,27 @@ import mapImage from "../assets/map.png";
 
 const CaptainHome = () => {
   const navigate = useNavigate();
-  const { captain } = useCaptain();
+  const { captain, setCaptain } = useCaptain();
   const [isOnline, setIsOnline] = useState(false);
   const [hasRideRequest, setHasRideRequest] = useState(false);
   const [isConfirmingRide, setIsConfirmingRide] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axiosInstance.get('/api/captains/profile');
+        if (response.data?.captain) {
+          setCaptain(response.data.captain);
+        }
+      } catch (error) {
+        console.error('Failed to load captain profile:', error);
+      }
+    };
+
+    if (!captain?.fullName?.firstName) {
+      fetchProfile();
+    }
+  }, [captain, setCaptain]);
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">

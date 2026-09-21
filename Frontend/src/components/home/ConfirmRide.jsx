@@ -1,12 +1,24 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { FiArrowLeft, FiCreditCard, FiMapPin } from 'react-icons/fi'
 import carImage from '../../assets/car.png'
 
 const ConfirmRide = ({ pickup, destination, vehicle, onBack, onConfirm }) => {
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
   const rideVehicle = vehicle ?? {
+    id: 'car',
     name: 'UberGo',
     price: '₹193.20',
     image: carImage,
+  }
+
+  const handleConfirmClick = async () => {
+    try {
+      setIsSubmitting(true)
+      await onConfirm?.(rideVehicle)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -16,7 +28,8 @@ const ConfirmRide = ({ pickup, destination, vehicle, onBack, onConfirm }) => {
           type="button"
           aria-label="Back to vehicle selection"
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f1f0] transition active:scale-95"
+          disabled={isSubmitting}
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f1f0] transition active:scale-95 disabled:opacity-50"
         >
           <FiArrowLeft />
         </button>
@@ -63,10 +76,11 @@ const ConfirmRide = ({ pickup, destination, vehicle, onBack, onConfirm }) => {
 
       <button
         type="button"
-        onClick={() => onConfirm?.(rideVehicle)}
-        className="mt-5 h-12 w-full rounded-xl bg-black text-sm font-semibold text-white transition active:scale-[0.99]"
+        disabled={isSubmitting}
+        onClick={handleConfirmClick}
+        className="mt-5 h-12 w-full rounded-xl bg-black text-sm font-semibold text-white transition active:scale-[0.99] disabled:opacity-75 disabled:cursor-not-allowed"
       >
-        Confirm
+        {isSubmitting ? 'Creating Ride...' : 'Confirm Ride'}
       </button>
     </div>
   )

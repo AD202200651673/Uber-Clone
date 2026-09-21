@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import {
@@ -24,42 +24,48 @@ import { axiosInstance } from '../api/core/api'
 
 const Home = () => {
   const navigate = useNavigate()
-
-  // useEffect(() => {
-  //   // Test API call to maps get-coordinates
-  //   axiosInstance
-  //     .get('/api/maps/get-coordinates', {
-  //       params: {
-  //         address: 'sheryians coding school indrapur',
-  //       },
-  //     })
-  //     .then((res) => {
-  //       console.log('Coordinates response:', res.data)
-  //     })
-  //     .catch((err) => {
-  //       console.error('Coordinates error in browser:', err.response?.data || err.message)
-  //     })
-  // }, [])
-  const [pickup, setPickup] = useState('Current Location')
+  
+  const [pickup, setPickup] = useState('')
   const [destination, setDestination] = useState('')
   const [selectedDestination, setSelectedDestination] = useState('')
   const [confirmedVehicle, setConfirmedVehicle] = useState(null)
   const [isLookingForDriver, setIsLookingForDriver] = useState(false)
   const [isWaitingForDriver, setIsWaitingForDriver] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
+  const [activeField, setActiveField] = useState('destination')
+  const [suggestions, setSuggestions] = useState([])
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
+  const [fare, setFare] = useState({})
+
   const sheetRef = useRef(null)
   const dragStartY = useRef(0)
   const dragStartExpanded = useRef(false)
   const pointerState = useRef({ active: false })
 
-  const suggestions = useMemo(
-    () => [
-      { label: 'Work', subtitle: 'Office · 12 min away' },
-      { label: 'SFO Terminal 2', subtitle: 'Airport · 18 min away' },
-      { label: 'Set pin on map', subtitle: 'Choose a custom drop-off' },
-    ],
-    [],
-  )
+  useEffect(() => {
+    const query = activeField === 'pickup' ? pickup : destination
+    if (!query || query.trim().length < 3) {
+      setSuggestions([])
+      return undefined
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsLoadingSuggestions(true)
+        const response = await axiosInstance.get('/api/maps/get-suggestions', {
+          params: { address: query },
+        })
+        setSuggestions(response.data || [])
+      } catch (error) {
+        console.error('Error fetching suggestions:', error.response?.data?.message || error.message)
+        setSuggestions([])
+      } finally {
+        setIsLoadingSuggestions(false)
+      }
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [pickup, destination, activeField])
 
   useEffect(() => {
     if (!sheetRef.current) return undefined
@@ -88,9 +94,41 @@ const Home = () => {
   const collapseSheet = () => setIsExpanded(false)
 
   const handleLocationSelect = (location) => {
-    setDestination(location)
-    setSelectedDestination(location)
-    setIsExpanded(true)
+    if (activeField === 'pickup') {
+      setPickup(location)
+      setSuggestions([])
+    } else {
+      setDestination(location)
+      setSuggestions([])
+      setIsExpanded(true)
+    }
+  }
+
+  const handleFindTrip = async () => {
+    if (!pickup.trim()) {
+      alert('Please enter a pickup location')
+      return
+    }
+    if (!destination.trim()) {
+      alert('Please enter a destination')
+      return
+    }
+    
+    try {
+      const response = await axiosInstance.get('/api/rides/get-fare', {
+        params: {
+          pickup,
+          destination,
+        },
+      })
+      setFare(response.data || {})
+      setSelectedDestination(destination)
+      setSuggestions([])
+      setIsExpanded(true)
+    } catch (error) {
+      console.error('Error fetching fare:', error.response?.data?.message || error.message)
+      alert(error.response?.data?.message || 'Failed to fetch fare for the selected route')
+    }
   }
 
   const handleChooseAnotherLocation = () => {
@@ -98,7 +136,7 @@ const Home = () => {
     setConfirmedVehicle(null)
     setIsLookingForDriver(false)
     setIsWaitingForDriver(false)
-    setDestination('')
+    setSuggestions([])
     setIsExpanded(true)
   }
 
@@ -109,17 +147,37 @@ const Home = () => {
 
   const handleBackToVehicles = () => setConfirmedVehicle(null)
 
-  const handleConfirmRide = (vehicle) => {
-    setConfirmedVehicle(vehicle)
-    setIsLookingForDriver(true)
-    setIsWaitingForDriver(false)
+  const handleConfirmRide = async (vehicle) => {
+    try {
+      const response = await axiosInstance.post('/api/rides/create', {
+        pickup,
+        destination: selectedDestination || destination,
+        vehicleType: vehicle?.id || confirmedVehicle?.id || 'car',
+      })
+      console.log('Ride created successfully:', response.data)
+      setConfirmedVehicle(vehicle)
+      setIsLookingForDriver(true)
+      setIsWaitingForDriver(false)
+      setIsExpanded(true)
+    } catch (error) {
+      console.error('Error creating ride:', error.response?.data?.message || error.message)
+      alert(error.response?.data?.message || 'Failed to create ride')
+      throw error
+    }
+  }
+
+  const handlePickupChange = (event) => {
+    const value = event.target.value
+    setPickup(value)
+    setActiveField('pickup')
     setIsExpanded(true)
   }
 
   const handleDestinationChange = (event) => {
     const value = event.target.value
     setDestination(value)
-    setIsExpanded(value.trim().length > 0)
+    setActiveField('destination')
+    setIsExpanded(true)
   }
 
   const handleDragStart = (event) => {
@@ -215,6 +273,7 @@ const Home = () => {
           ) : selectedDestination ? (
             <VehicleSelection
               destination={selectedDestination}
+              fare={fare}
               onBack={handleChooseAnotherLocation}
               onConfirm={handleVehicleConfirm}
             />
@@ -223,15 +282,61 @@ const Home = () => {
               <button type="button" onClick={() => (isExpanded ? collapseSheet() : expandSheet())} className="mb-3 flex w-full items-center justify-center rounded-[20px] bg-[#f3f1f0] py-2 text-sm font-medium">{isExpanded ? 'Collapse sheet' : 'Expand sheet'}</button>
 
               <div className="relative flex items-stretch gap-2.5 rounded-[20px] bg-[#f3f1f0] p-3">
-            <div className="flex w-4 flex-col items-center justify-between py-2.5"><div className="h-2.5 w-2.5 rounded-full bg-[#0054cb] ring-4 ring-[#dfeafb]" /><div className="my-1 h-8 w-0.5 bg-[#d9d5d2]" /><div className="h-2.5 w-2.5 rounded-sm bg-[#1b1c1c]" /></div>
-            <div className="flex min-w-0 flex-1 flex-col gap-2">
-              <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-black/5"><div className="min-w-0"><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5e5e5e]">Pickup</p><input type="text" value={pickup} onChange={(event) => setPickup(event.target.value)} className="w-full bg-transparent text-[15px] font-medium outline-none" /></div><FiNavigation className="ml-3 text-[18px] text-[#5e5e5e]" /></div>
-              <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-black/5"><div className="min-w-0 flex-1"><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0054cb]">Destination</p><input type="text" value={destination} onFocus={expandSheet} onChange={handleDestinationChange} placeholder="Where to?" className="w-full bg-transparent text-[15px] font-medium placeholder:text-[#8f8f8f] outline-none" /></div><FiSearch className="ml-3 text-[18px]" /></div>
-            </div>
-            <div className="flex flex-col items-center justify-around pl-1"><button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb]"><FiRepeat /></button><button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb]"><FiPlus /></button></div>
+                <div className="flex w-4 flex-col items-center justify-between py-2.5"><div className="h-2.5 w-2.5 rounded-full bg-[#0054cb] ring-4 ring-[#dfeafb]" /><div className="my-1 h-8 w-0.5 bg-[#d9d5d2]" /><div className="h-2.5 w-2.5 rounded-sm bg-[#1b1c1c]" /></div>
+                <div className="flex min-w-0 flex-1 flex-col gap-2">
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-black/5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5e5e5e]">Pickup</p>
+                      <input
+                        type="text"
+                        value={pickup}
+                        onFocus={() => {
+                          setActiveField('pickup')
+                          setIsExpanded(true)
+                        }}
+                        onChange={handlePickupChange}
+                        placeholder="Pickup location"
+                        className="w-full bg-transparent text-[15px] font-medium outline-none"
+                      />
+                    </div>
+                    <FiNavigation className="ml-3 text-[18px] text-[#5e5e5e]" />
+                  </div>
+                  <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-black/5">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0054cb]">Destination</p>
+                      <input
+                        type="text"
+                        value={destination}
+                        onFocus={() => {
+                          setActiveField('destination')
+                          expandSheet()
+                        }}
+                        onChange={handleDestinationChange}
+                        placeholder="Where to?"
+                        className="w-full bg-transparent text-[15px] font-medium placeholder:text-[#8f8f8f] outline-none"
+                      />
+                    </div>
+                    <FiSearch className="ml-3 text-[18px]" />
+                  </div>
+                </div>
+                <div className="flex flex-col items-center justify-around pl-1"><button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb]"><FiRepeat /></button><button type="button" className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb]"><FiPlus /></button></div>
               </div>
 
-              {isExpanded && <SuggestionList suggestions={suggestions} onSelect={handleLocationSelect} />}
+              <button
+                type="button"
+                onClick={handleFindTrip}
+                className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-black text-sm font-semibold text-white transition active:scale-[0.99]"
+              >
+                Find Trip
+              </button>
+
+              {isExpanded && suggestions.length > 0 && (
+                <SuggestionList
+                  suggestions={suggestions}
+                  onSelect={handleLocationSelect}
+                  isLoading={isLoadingSuggestions}
+                />
+              )}
             </>
           )}
         </div>

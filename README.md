@@ -1007,3 +1007,79 @@ Content-Type: application/json
 | `401 Unauthorized` | Missing or invalid authentication token |
 | `500 Internal Server Error` | Unexpected server or database error |
 
+## Get Fare
+
+Calculates the estimated fare for available vehicle types (`car`, `motorcycle`, `auto`) between pickup and destination addresses.
+
+### Endpoint
+
+```http
+GET /api/rides/get-fare
+```
+
+### Authentication
+
+Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
+
+### Query Parameters
+
+| Parameter | Type | Requirements |
+| --- | --- | --- |
+| `pickup` | string | Required; pickup address |
+| `destination` | string | Required; destination address |
+
+### Example Request
+
+```http
+GET /api/rides/get-fare?pickup=Sheryians%20Coding%20School%20Bhopal&destination=DB%20City%20Mall%20Bhopal
+```
+
+### Success Response
+
+**Status: `200 OK`**
+
+```json
+{
+  "auto": 118,
+  "car": 193,
+  "motorcycle": 65
+}
+```
+
+### Validation Error
+
+**Status: `400 Bad Request`**
+
+```json
+{
+  "errors": [
+    {
+      "type": "field",
+      "msg": "Pickup location is required",
+      "path": "pickup",
+      "location": "query"
+    }
+  ]
+}
+```
+
+### Unauthorized Error
+
+**Status: `401 Unauthorized`**
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+### Status Codes
+
+| Status code | Meaning |
+| --- | --- |
+| `200 OK` | Fare calculated successfully |
+| `400 Bad Request` | Missing or invalid query parameters |
+| `401 Unauthorized` | Missing or invalid authentication token |
+| `500 Internal Server Error` | Unexpected server or routing error |
+
+

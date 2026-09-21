@@ -4,35 +4,35 @@ import autoImage from '../../assets/auto.png'
 import bikeImage from '../../assets/bike.png'
 import carImage from '../../assets/car.png'
 
-const vehicleOptions = [
-  {
-    id: 'car',
-    name: 'UberGo',
-    detail: 'Affordable, compact rides',
-    eta: '2 mins away',
-    price: '₹193.20',
-    image: carImage,
-  },
-  {
-    id: 'bike',
-    name: 'Moto',
-    detail: 'Affordable motorcycle rides',
-    eta: '3 mins away',
-    price: '₹65',
-    image: bikeImage,
-  },
-  {
-    id: 'auto',
-    name: 'UberAuto',
-    detail: 'Affordable Auto rides',
-    eta: '3 mins away',
-    price: '₹118.86',
-    image: autoImage,
-  },
-]
-
-const VehicleSelection = ({ destination, onBack, onConfirm }) => {
+const VehicleSelection = ({ destination, fare = {}, onBack, onConfirm }) => {
   const [selectedVehicle, setSelectedVehicle] = useState('car')
+
+  const vehicleOptions = [
+    {
+      id: 'car',
+      name: 'UberGo',
+      detail: 'Affordable, compact rides',
+      eta: '2 mins away',
+      price: fare.car ? `₹${fare.car}` : '₹--',
+      image: carImage,
+    },
+    {
+      id: 'motorcycle',
+      name: 'Moto',
+      detail: 'Affordable motorcycle rides',
+      eta: '3 mins away',
+      price: (fare.motorcycle || fare.moto) ? `₹${fare.motorcycle || fare.moto}` : '₹--',
+      image: bikeImage,
+    },
+    {
+      id: 'auto',
+      name: 'UberAuto',
+      detail: 'Affordable Auto rides',
+      eta: '3 mins away',
+      price: fare.auto ? `₹${fare.auto}` : '₹--',
+      image: autoImage,
+    },
+  ]
 
   return (
     <div className="flex min-h-full flex-col">
