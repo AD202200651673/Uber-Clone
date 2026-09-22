@@ -10,9 +10,7 @@ const RidePopUp = ({ ride, onAccept, onIgnore }) => {
     : 'U';
 
   return (
-    <section className="absolute inset-x-3 bottom-4 z-50 rounded-2xl border border-[#eeeeee] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
-      <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#d7d2ce]" />
-
+    <div className="flex flex-col min-h-full">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#1b1c1c] text-sm font-bold text-white">
@@ -53,7 +51,7 @@ const RidePopUp = ({ ride, onAccept, onIgnore }) => {
         <button type="button" onClick={onIgnore} className="h-12 rounded-xl bg-[#f3f1f0] text-sm font-semibold text-[#8f8f8f] transition hover:bg-[#e9e7e5] active:scale-[0.99]">Ignore</button>
         <button type="button" onClick={onAccept} className="h-12 rounded-xl bg-[#ffd21f] text-sm font-bold text-[#1b1c1c] transition hover:bg-[#f5c400] active:scale-[0.99]">Accept ride</button>
       </div>
-    </section>
+    </div>
   )
 }
 

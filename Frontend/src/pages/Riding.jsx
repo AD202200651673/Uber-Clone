@@ -1,8 +1,9 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { FiArrowLeft, FiMapPin, FiMessageSquare, FiPhone, FiUser } from 'react-icons/fi'
 import carImage from '../assets/car.png'
 import LiveTracking from '../components/LiveTracking/LiveTracking'
+import BottomSheet, { SNAP_POINTS } from '../components/common/BottomSheet'
 import { SocketContext } from '../context/SocketContext'
 
 const Riding = () => {
@@ -10,6 +11,7 @@ const Riding = () => {
   const location = useLocation()
   const ride = location.state?.ride
   const { socket } = useContext(SocketContext)
+  const [snapPoint, setSnapPoint] = useState(SNAP_POINTS.HALF)
 
   useEffect(() => {
     if (!socket) return
@@ -38,7 +40,7 @@ const Riding = () => {
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
-      <section className="relative h-[58vh] min-h-[380px] overflow-hidden bg-[#e6e2db]">
+      <section className="relative h-full w-full overflow-hidden bg-[#e6e2db]">
         <LiveTracking className="h-full w-full" />
 
         <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pt-4">
@@ -51,9 +53,7 @@ const Riding = () => {
         </div>
       </section>
 
-      <section className="absolute inset-x-0 bottom-0 z-30 rounded-t-[28px] border-t border-black/5 bg-[#fbf9f8] px-4 pb-7 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-        <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-[#d7d2ce]" />
-
+      <BottomSheet snapPoint={snapPoint} onSnapChange={setSnapPoint}>
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ const Riding = () => {
           <FiMapPin className="mt-0.5 text-[16px] text-[#0054cb]" />
           <div><p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#0054cb]">Destination</p><p className="text-[14px] font-semibold">{destination}</p></div>
         </div>
-      </section>
+      </BottomSheet>
     </main>
   )
 }

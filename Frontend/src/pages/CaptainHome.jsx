@@ -1,8 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  FiMenu,
-  FiNavigation,
+  FiLogOut,
   FiUser
 } from "react-icons/fi";
 import { useCaptain } from "../context/CaptainContext";
@@ -11,15 +10,17 @@ import CaptainDetails from "../components/captain/CaptainDetails";
 import RidePopUp from "../components/captain/RidePopUp";
 import ConfirmRidePopUp from "../components/captain/ConfirmRidePopUp";
 import LiveTracking from "../components/LiveTracking/LiveTracking";
+import BottomSheet, { SNAP_POINTS } from "../components/common/BottomSheet";
 import { SocketContext } from "../context/SocketContext";
 
 const CaptainHome = () => {
   const navigate = useNavigate();
   const { captain, setCaptain } = useCaptain();
-  const [isOnline, setIsOnline] = useState(false);
   const [hasRideRequest, setHasRideRequest] = useState(false);
   const [isConfirmingRide, setIsConfirmingRide] = useState(false);
   const [ride, setRide] = useState(null);
+  const [snapPoint, setSnapPoint] = useState(SNAP_POINTS.HALF);
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
 
   const { socket, sendMessage, receiveMessage } = useContext(SocketContext);
 
@@ -58,6 +59,7 @@ const CaptainHome = () => {
       console.log('🚖 New ride request received in CaptainHome:', data);
       setRide(data);
       setHasRideRequest(true);
+      setSnapPoint(SNAP_POINTS.HALF);
     };
 
     socket.on('new-ride', handleNewRide);
@@ -93,6 +95,7 @@ const CaptainHome = () => {
       setRide(response.data);
       setHasRideRequest(false);
       setIsConfirmingRide(true);
+      setSnapPoint(SNAP_POINTS.FULL);
     } catch (error) {
       console.error('Failed to accept ride:', error);
       alert(error.response?.data?.message || 'Failed to accept ride');
@@ -119,81 +122,85 @@ const CaptainHome = () => {
 
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
-      <section className="relative h-[58vh] min-h-[390px] overflow-hidden bg-[#e6e2db]">
+      <section className="relative h-full w-full overflow-hidden bg-[#e6e2db]">
         <LiveTracking className="h-full w-full" />
 
-        <div
-          className={`absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 transition-colors ${isOnline ? "bg-[#0e8345]" : "bg-[#f3a12b]"}`}
-        >
-          <div className="flex items-center gap-3 text-white">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-black/15">
-              <FiNavigation className="text-xl" />
-            </div>
-            <div>
-              <p className="text-[15px] font-bold">
-                {isOnline ? "You are online" : "You are offline"}
-              </p>
-              <p className="text-[11px] text-white/85">
-                {isOnline
-                  ? "Ready to accept new trips"
-                  : "Go online to start accepting jobs"}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setIsOnline((current) => {
-                const nextOnlineState = !current;
-                if (!nextOnlineState) {
-                  setHasRideRequest(false);
-                  setIsConfirmingRide(false);
-                  setRide(null);
-                }
-                return nextOnlineState;
-              });
-            }}
-            className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#1b1c1c] shadow-sm transition active:scale-95"
-          >
-            {isOnline ? "Go offline" : "Go online"}
-          </button>
-        </div>
+        {/* Top Header Floating Profile Button */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-start px-4 pb-2 pt-4">
+          <div className="relative pointer-events-auto">
+            <button
+              type="button"
+              aria-label="Captain profile"
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95 hover:bg-white"
+            >
+              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
+                <FiUser className="text-[16px]" />
+              </span>
+            </button>
 
-        <div className="pointer-events-none absolute left-0 right-0 top-[72px] z-20 flex items-center justify-between px-4">
-          <button
-            type="button"
-            aria-label="Open menu"
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
-          >
-            <FiMenu className="text-xl" />
-          </button>
-          <button
-            type="button"
-            aria-label="Captain profile"
-            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
-          >
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
-              <FiUser className="text-[16px]" />
-            </span>
-          </button>
+            {showProfileMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+                  onClick={() => setShowProfileMenu(false)}
+                />
+                <div className="absolute left-0 top-12 z-50 w-64 rounded-2xl border border-black/5 bg-white p-3 shadow-2xl">
+                  <div className="flex items-center gap-3 border-b border-neutral-100 pb-3">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
+                      {captain?.fullName?.firstName ? captain.fullName.firstName[0].toUpperCase() : 'C'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-[14px] font-bold text-[#1b1c1c]">
+                        {captain?.fullName?.firstName ? `${captain.fullName.firstName} ${captain.fullName.lastName || ''}`.trim() : 'Captain'}
+                      </p>
+                      <p className="truncate text-[11px] text-[#716e6b]">{captain?.email || 'Captain Account'}</p>
+                    </div>
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowProfileMenu(false)
+                        navigate('/captain-logout')
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
+                    >
+                      <FiLogOut className="text-[16px]" />
+                      <span>Log out</span>
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </section>
 
-      {isConfirmingRide ? (
-        <ConfirmRidePopUp
-          ride={ride}
-          onConfirm={handleStartRide}
-          onCancel={() => setIsConfirmingRide(false)}
-        />
-      ) : hasRideRequest ? (
-        <RidePopUp
-          ride={ride}
-          onIgnore={() => setHasRideRequest(false)}
-          onAccept={handleAcceptRide}
-        />
-      ) : (
-        <CaptainDetails captain={captain} isOnline={isOnline} />
-      )}
+      <BottomSheet snapPoint={snapPoint} onSnapChange={setSnapPoint}>
+        {isConfirmingRide ? (
+          <ConfirmRidePopUp
+            ride={ride}
+            onConfirm={handleStartRide}
+            onCancel={() => {
+              setIsConfirmingRide(false);
+              setSnapPoint(SNAP_POINTS.HALF);
+            }}
+          />
+        ) : hasRideRequest ? (
+          <RidePopUp
+            ride={ride}
+            onIgnore={() => {
+              setHasRideRequest(false);
+              setSnapPoint(SNAP_POINTS.HALF);
+            }}
+            onAccept={handleAcceptRide}
+          />
+        ) : (
+          <CaptainDetails captain={captain} />
+        )}
+      </BottomSheet>
     </main>
   );
 };

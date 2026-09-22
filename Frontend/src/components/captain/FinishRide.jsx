@@ -29,18 +29,24 @@ const FinishRide = ({ ride, pickup, destination, onBack, onComplete }) => {
   };
 
   return (
-    <section className="absolute inset-x-0 bottom-0 z-40 rounded-t-[28px] border-t border-black/5 bg-[#fbf9f8] px-4 pb-7 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-      <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-[#d7d2ce]" />
-      <div className="mb-4 flex items-center gap-3">
-        <button
-          type="button"
-          aria-label="Back to destination"
-          onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f1f0] transition active:scale-95"
-        >
-          <FiArrowLeft />
-        </button>
-        <h2 className="text-[20px] font-bold tracking-[-0.02em]">Finish ride</h2>
+    <div className="flex flex-col min-h-full">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          {onBack && (
+            <button
+              type="button"
+              aria-label="Back to destination"
+              onClick={onBack}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[#f3f1f0] transition active:scale-95"
+            >
+              <FiArrowLeft />
+            </button>
+          )}
+          <h2 className="text-[20px] font-bold tracking-[-0.02em]">Active Ride</h2>
+        </div>
+        <span className="rounded-full bg-[#e7f3ec] px-3 py-1 text-[11px] font-semibold text-[#0e8345]">
+          Trip in progress
+        </span>
       </div>
 
       <div className="rounded-2xl bg-[#f3f1f0] p-4">
@@ -107,7 +113,7 @@ const FinishRide = ({ ride, pickup, destination, onBack, onComplete }) => {
       >
         <FiCheck /> Complete ride
       </button>
-    </section>
+    </div>
   );
 };
 

@@ -1,9 +1,7 @@
 import React from 'react'
-import { useNavigate } from 'react-router-dom'
-import { FiClock, FiLogOut, FiMapPin, FiTruck, FiUser } from 'react-icons/fi'
+import { FiClock, FiMapPin, FiTruck, FiUser } from 'react-icons/fi'
 
-const CaptainDetails = ({ captain, isOnline }) => {
-  const navigate = useNavigate()
+const CaptainDetails = ({ captain }) => {
   const firstName = captain?.fullName?.firstName || ''
   const lastName = captain?.fullName?.lastName || ''
   const captainName = `${firstName} ${lastName}`.trim() || 'Captain'
@@ -16,9 +14,7 @@ const CaptainDetails = ({ captain, isOnline }) => {
   const capacity = captain?.vehicle?.capacity || 1
 
   return (
-    <section className="absolute inset-x-0 bottom-0 z-40 rounded-t-[28px] border-t border-black/5 bg-[#fbf9f8] px-4 pb-6 pt-3 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
-      <div className="mx-auto mb-4 h-1.5 w-10 rounded-full bg-[#d7d2ce]" />
-
+    <div className="flex flex-col min-h-full">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
@@ -38,8 +34,8 @@ const CaptainDetails = ({ captain, isOnline }) => {
       <div className="grid grid-cols-3 divide-x divide-black/10 rounded-xl bg-[#ffd83d] py-4">
         <div className="text-center">
           <FiClock className="mx-auto mb-2 text-xl" />
-          <p className="text-[16px] font-bold">{isOnline ? 'Online' : 'Offline'}</p>
-          <p className="mt-1 text-[9px] font-semibold uppercase text-black/60">Status</p>
+          <p className="text-[16px] font-bold">10.2</p>
+          <p className="mt-1 text-[9px] font-semibold uppercase text-black/60">Hours Online</p>
         </div>
         <div className="text-center">
           <FiTruck className="mx-auto mb-2 text-xl" />
@@ -55,19 +51,9 @@ const CaptainDetails = ({ captain, isOnline }) => {
 
       <div className="mt-3 flex items-center justify-between rounded-xl border border-[#eeeeee] bg-white px-3 py-2.5 text-[12px]">
         <span className="flex items-center gap-2 text-[#5e5e5e]"><FiUser /> Vehicle & Status</span>
-        <span className={`font-semibold ${isOnline ? 'text-[#0e8345]' : 'text-[#5e5e5e]'}`}>
-          {isOnline ? 'Verified · Active & Online' : 'Verified · Offline'}
-        </span>
+        <span className="font-semibold text-[#0e8345]">Verified · Active</span>
       </div>
-
-      <button
-        type="button"
-        onClick={() => navigate('/captain-logout')}
-        className="mt-3 flex w-full items-center justify-center gap-2 text-[12px] font-semibold text-[#5e5e5e] hover:text-black transition"
-      >
-        <FiLogOut /> Sign out
-      </button>
-    </section>
+    </div>
   )
 }
 

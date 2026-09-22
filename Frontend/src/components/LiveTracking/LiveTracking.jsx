@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { FiNavigation, FiTarget } from 'react-icons/fi';
+import { FiCrosshair, FiNavigation, FiTarget } from 'react-icons/fi';
 
 const MAPBOX_TOKEN =
   import.meta.env.VITE_MAPBOX_TOKEN ||
@@ -13,7 +13,7 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
   const userMarkerRef = useRef(null);
   const isFirstPosition = useRef(true);
   const [currentPosition, setCurrentPosition] = useState(null);
-  const [isLocating, setIsLocating] = useState(true);
+  const [isLocating, setIsLocating] = useState(false);
 
   // Default fallback center (Mumbai / India coordinates)
   const defaultCenter = [72.8777, 19.076];
@@ -59,7 +59,6 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
             const { longitude, latitude } = position.coords;
             const userCoords = [longitude, latitude];
             setCurrentPosition(userCoords);
-            setIsLocating(false);
 
             if (marker) {
               marker.setLngLat(userCoords);
@@ -78,13 +77,11 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
           },
           (error) => {
             console.warn('Geolocation update error:', error.message);
-            setIsLocating(false);
           },
           { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
         );
       } else {
         console.warn('Geolocation is not supported by this browser.');
-        setIsLocating(false);
       }
     };
 
@@ -101,31 +98,53 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
     };
   }, []);
 
-  // Handler to smoothly re-center map on user's live position
+  // Handler to smoothly re-center map on user/captain's live position
   const handleRecenter = () => {
     if (!mapRef.current) return;
 
-    if (currentPosition) {
+    if (navigator.geolocation) {
+      setIsLocating(true);
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { longitude, latitude } = position.coords;
+          const userCoords = [longitude, latitude];
+          setCurrentPosition(userCoords);
+          setIsLocating(false);
+
+          if (userMarkerRef.current) {
+            userMarkerRef.current.setLngLat(userCoords);
+          }
+
+          mapRef.current.flyTo({
+            center: userCoords,
+            zoom: 16,
+            pitch: 30,
+            essential: true,
+            duration: 1200,
+          });
+        },
+        (error) => {
+          console.warn('Geolocation error on recenter:', error.message);
+          setIsLocating(false);
+          if (currentPosition && mapRef.current) {
+            mapRef.current.flyTo({
+              center: currentPosition,
+              zoom: 16,
+              pitch: 30,
+              essential: true,
+              duration: 1000,
+            });
+          }
+        },
+        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+      );
+    } else if (currentPosition) {
       mapRef.current.flyTo({
         center: currentPosition,
         zoom: 16,
+        pitch: 30,
         essential: true,
         duration: 1000,
-      });
-    } else if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition((position) => {
-        const { longitude, latitude } = position.coords;
-        const userCoords = [longitude, latitude];
-        setCurrentPosition(userCoords);
-        if (userMarkerRef.current) {
-          userMarkerRef.current.setLngLat(userCoords);
-        }
-        mapRef.current.flyTo({
-          center: userCoords,
-          zoom: 16,
-          essential: true,
-          duration: 1000,
-        });
       });
     }
   };
@@ -135,21 +154,24 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
       {/* Map Container */}
       <div ref={mapContainerRef} className="h-full w-full" />
 
-      {/* Floating Recenter Button */}
-      <button
-        type="button"
-        onClick={handleRecenter}
-        aria-label="Recenter map on current location"
-        className="absolute bottom-5 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full border border-black/10 bg-white/95 text-[#1b1c1c] shadow-lg backdrop-blur-sm transition hover:bg-white active:scale-95"
-      >
-        <FiTarget className="text-xl" />
-      </button>
+      {/* Floating Recenter / Current Location Button */}
+      <div className="absolute right-2.5 top-[124px] z-20">
+        <button
+          type="button"
+          onClick={handleRecenter}
+          aria-label="Go to current location"
+          title="Go to current location"
+          className="flex h-10 w-10 items-center justify-center rounded-full border border-black/10 bg-white/95 text-[#1b1c1c] shadow-lg backdrop-blur-sm transition hover:bg-white hover:shadow-xl active:scale-90"
+        >
+          <FiCrosshair className={`text-[20px] text-neutral-800 ${isLocating ? 'animate-spin text-blue-600' : ''}`} />
+        </button>
+      </div>
 
-      {/* Geolocation Status Badge */}
+      {/* Geolocation Status Badge (Centered top toast) */}
       {isLocating && (
-        <div className="absolute left-4 top-4 z-10 flex items-center gap-2 rounded-full bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#1b1c1c] shadow-md backdrop-blur-sm">
-          <FiNavigation className="animate-spin text-blue-600" />
-          <span>Locating you...</span>
+        <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-[#1b1c1c] shadow-lg backdrop-blur-md">
+          <FiNavigation className="animate-spin text-blue-600 text-sm" />
+          <span>Locating your position...</span>
         </div>
       )}
     </div>

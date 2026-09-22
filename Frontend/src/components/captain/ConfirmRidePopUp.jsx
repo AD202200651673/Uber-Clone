@@ -16,8 +16,7 @@ const ConfirmRidePopUp = ({ ride, onConfirm, onCancel }) => {
     : 'U';
 
   return (
-    <section className="absolute inset-x-3 bottom-4 z-50 rounded-2xl border border-[#eeeeee] bg-white p-4 shadow-[0_8px_30px_rgba(0,0,0,0.18)]">
-      <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#d7d2ce]" />
+    <div className="flex flex-col min-h-full">
       <h2 className="mb-4 text-[18px] font-bold tracking-[-0.02em]">Confirm this ride to Start</h2>
 
       <div className="mb-3 flex items-center justify-between rounded-lg bg-[#ffd83d] px-3 py-2">
@@ -58,28 +57,32 @@ const ConfirmRidePopUp = ({ ride, onConfirm, onCancel }) => {
         <span className="mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.12em] text-[#5e5e5e]">Enter OTP</span>
         <input
           type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          maxLength={4}
           value={otp}
           onChange={handleOtpChange}
           placeholder="Enter 4-digit OTP"
-          className="h-11 w-full rounded-xl border border-[#eeeeee] bg-[#f3f1f0] px-3 text-center text-[18px] font-bold tracking-[0.35em] outline-none transition focus:border-black focus:bg-white"
+          className="h-12 w-full rounded-xl bg-[#f3f1f0] px-3 font-mono text-[18px] font-bold tracking-[0.25em] text-center outline-none ring-1 ring-black/10 focus:ring-2 focus:ring-black"
+          maxLength={4}
         />
       </label>
 
-      <div className="mt-4 grid gap-2">
+      <div className="mt-5 grid grid-cols-[1fr_1.35fr] gap-3">
         <button
           type="button"
-          onClick={() => onConfirm?.(otp)}
-          disabled={otp.length !== 4}
-          className="h-10 rounded-md bg-[#4da35b] text-[12px] font-bold text-white transition active:scale-[0.99] disabled:cursor-not-allowed disabled:bg-[#b7cdb9]"
+          onClick={onCancel}
+          className="h-12 rounded-xl bg-[#f3f1f0] text-sm font-semibold text-[#8f8f8f] transition hover:bg-[#e9e7e5] active:scale-[0.99]"
         >
-          Confirm
+          Cancel
         </button>
-        <button type="button" onClick={onCancel} className="h-10 rounded-md bg-[#d33b2c] text-[12px] font-bold text-white transition active:scale-[0.99]">Cancel</button>
+        <button
+          type="button"
+          disabled={otp.length !== 4}
+          onClick={() => onConfirm(otp)}
+          className="h-12 rounded-xl bg-[#0e8345] text-sm font-bold text-white transition hover:bg-[#0c733c] active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Start trip
+        </button>
       </div>
-    </section>
+    </div>
   )
 }
 
