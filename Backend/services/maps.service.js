@@ -1,4 +1,5 @@
 const axios = require('axios');
+const captainModel = require('../models/captain.model')
 
 module.exports.getAddressCoordinate = async (address) => {
     const apiKey = process.env.MAPBOX_PUBLIC_API || process.env.MAPBOX_TOKEN || process.env.MAPBOX_ACCESS_TOKEN;
@@ -96,3 +97,40 @@ module.exports.getSuggestions = async (address) => {
         throw error;
     }
 };
+
+module.exports.getCaptainInRadius = async (ltd, lng, radius = 50) => {
+    // Find captains with active socket connections
+    const captains = await captainModel.find({
+        socketId: { $ne: null }
+    });
+
+    if (!captains || captains.length === 0) {
+        return [];
+    }
+
+    // Filter captains within radius (in km)
+    const captainsInRadius = captains.filter(captain => {
+        if (!captain.location || typeof captain.location.ltd !== 'number' || typeof captain.location.lng !== 'number') {
+            // For testing/development: if captain is connected, notify them
+            return true;
+        }
+
+        const toRad = (value) => (value * Math.PI) / 180;
+        const R = 6371; // Earth's radius in km
+
+        const dLat = toRad(captain.location.ltd - ltd);
+        const dLon = toRad(captain.location.lng - lng);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRad(ltd)) * Math.cos(toRad(captain.location.ltd)) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        const distance = R * c;
+
+        return distance <= radius;
+    });
+
+    return captainsInRadius;
+};
+
+module.exports.getCaptainInTheRadius = module.exports.getCaptainInRadius; 

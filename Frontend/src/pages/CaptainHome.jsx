@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   FiMenu,
   FiNavigation,
-  FiTarget,
   FiUser
 } from "react-icons/fi";
 import { useCaptain } from "../context/CaptainContext";
@@ -11,7 +10,8 @@ import { axiosInstance } from "../api/core/api";
 import CaptainDetails from "../components/captain/CaptainDetails";
 import RidePopUp from "../components/captain/RidePopUp";
 import ConfirmRidePopUp from "../components/captain/ConfirmRidePopUp";
-import mapImage from "../assets/map.png";
+import LiveTracking from "../components/LiveTracking/LiveTracking";
+import { SocketContext } from "../context/SocketContext";
 
 const CaptainHome = () => {
   const navigate = useNavigate();
@@ -19,6 +19,53 @@ const CaptainHome = () => {
   const [isOnline, setIsOnline] = useState(false);
   const [hasRideRequest, setHasRideRequest] = useState(false);
   const [isConfirmingRide, setIsConfirmingRide] = useState(false);
+  const [ride, setRide] = useState(null);
+
+  const { socket, sendMessage, receiveMessage } = useContext(SocketContext);
+
+  useEffect(() => {
+    if (!captain?._id) return;
+
+    sendMessage("join", {
+      userId: captain._id,
+      usertype: "captain",
+    });
+
+    const updateLocation = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          sendMessage("update-location-captain", {
+            userId: captain._id,
+            location: {
+              ltd: position.coords.latitude,
+              lng: position.coords.longitude,
+            },
+          });
+        });
+      }
+    };
+
+    const locationInterval = setInterval(updateLocation, 10000);
+    updateLocation();
+
+    return () => clearInterval(locationInterval);
+  }, [captain?._id, sendMessage]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleNewRide = (data) => {
+      console.log('🚖 New ride request received in CaptainHome:', data);
+      setRide(data);
+      setHasRideRequest(true);
+    };
+
+    socket.on('new-ride', handleNewRide);
+
+    return () => {
+      socket.off('new-ride', handleNewRide);
+    };
+  }, [socket]);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -37,15 +84,43 @@ const CaptainHome = () => {
     }
   }, [captain, setCaptain]);
 
+  const handleAcceptRide = async () => {
+    if (!ride?._id) return;
+    try {
+      const response = await axiosInstance.post('/api/rides/confirm-ride', {
+        rideId: ride._id,
+      });
+      setRide(response.data);
+      setHasRideRequest(false);
+      setIsConfirmingRide(true);
+    } catch (error) {
+      console.error('Failed to accept ride:', error);
+      alert(error.response?.data?.message || 'Failed to accept ride');
+    }
+  };
+
+  const handleStartRide = async (otp) => {
+    if (!ride?._id || !otp) return;
+    try {
+      const response = await axiosInstance.get('/api/rides/start-ride', {
+        params: {
+          rideId: ride._id,
+          otp: otp,
+        },
+      });
+      setIsConfirmingRide(false);
+      setHasRideRequest(false);
+      navigate('/captain-riding', { state: { ride: response.data } });
+    } catch (error) {
+      console.error('Failed to start ride:', error);
+      alert(error.response?.data?.message || 'Invalid OTP');
+    }
+  };
+
   return (
     <main className="relative h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
       <section className="relative h-[58vh] min-h-[390px] overflow-hidden bg-[#e6e2db]">
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${mapImage})` }}
-          aria-label="Captain map"
-        />
-        <div className="absolute inset-0 bg-white/10" />
+        <LiveTracking className="h-full w-full" />
 
         <div
           className={`absolute inset-x-0 top-0 z-30 flex items-center justify-between px-4 py-3 transition-colors ${isOnline ? "bg-[#0e8345]" : "bg-[#f3a12b]"}`}
@@ -68,9 +143,15 @@ const CaptainHome = () => {
           <button
             type="button"
             onClick={() => {
-              setIsOnline((current) => !current);
-              setHasRideRequest((current) => !isOnline && !current);
-              setIsConfirmingRide(false);
+              setIsOnline((current) => {
+                const nextOnlineState = !current;
+                if (!nextOnlineState) {
+                  setHasRideRequest(false);
+                  setIsConfirmingRide(false);
+                  setRide(null);
+                }
+                return nextOnlineState;
+              });
             }}
             className="rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#1b1c1c] shadow-sm transition active:scale-95"
           >
@@ -78,56 +159,37 @@ const CaptainHome = () => {
           </button>
         </div>
 
-        <div className="absolute left-0 right-0 top-[72px] z-20 flex items-center justify-between px-4">
+        <div className="pointer-events-none absolute left-0 right-0 top-[72px] z-20 flex items-center justify-between px-4">
           <button
             type="button"
             aria-label="Open menu"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
           >
             <FiMenu className="text-xl" />
           </button>
           <button
             type="button"
             aria-label="Captain profile"
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
+            className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95"
           >
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
               <FiUser className="text-[16px]" />
             </span>
           </button>
         </div>
-
-        <div
-          className={`absolute left-[48%] top-[52%] z-10 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full ${isOnline ? "bg-[#0e8345]/20" : "bg-[#f3a12b]/25"}`}
-        >
-          <div
-            className={`flex h-10 w-10 items-center justify-center rounded-full border-2 border-white shadow-lg ${isOnline ? "bg-[#0e8345]" : "bg-[#1b1c1c]"}`}
-          >
-            <FiNavigation className="text-xl text-white" />
-          </div>
-        </div>
-        <button
-          type="button"
-          aria-label="Recenter map"
-          className="absolute bottom-5 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/5 bg-white/95 shadow-lg transition active:scale-95"
-        >
-          <FiTarget className="text-xl" />
-        </button>
       </section>
 
       {isConfirmingRide ? (
         <ConfirmRidePopUp
-          onConfirm={() => {
-            setIsConfirmingRide(false);
-            setHasRideRequest(false);
-            navigate('/captain-riding');
-          }}
+          ride={ride}
+          onConfirm={handleStartRide}
           onCancel={() => setIsConfirmingRide(false)}
         />
       ) : hasRideRequest ? (
         <RidePopUp
+          ride={ride}
           onIgnore={() => setHasRideRequest(false)}
-          onAccept={() => setIsConfirmingRide(true)}
+          onAccept={handleAcceptRide}
         />
       ) : (
         <CaptainDetails captain={captain} isOnline={isOnline} />

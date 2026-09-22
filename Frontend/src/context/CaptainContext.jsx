@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState } from 'react'
 
 export const CaptainDataContext = createContext(null)
+export const CaptainContext = CaptainDataContext
 
 export const useCaptain = () => {
   const context = useContext(CaptainDataContext)
@@ -12,7 +13,7 @@ export const useCaptain = () => {
   return context
 }
 
-const CaptainContext = ({ children }) => {
+const CaptainProvider = ({ children }) => {
   const [captain, setCaptain] = useState({
     email: '',
     fullName: {
@@ -28,4 +29,4 @@ const CaptainContext = ({ children }) => {
   )
 }
 
-export default CaptainContext
+export default CaptainProvider

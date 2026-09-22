@@ -1,17 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { gsap } from 'gsap'
 import {
   FiChevronDown,
   FiClock,
   FiMenu,
-  FiMapPin,
   FiNavigation,
   FiPlus,
   FiRepeat,
   FiSearch,
-  FiTarget,
-  FiTruck,
   FiUser,
 } from 'react-icons/fi'
 import SuggestionList from '../components/home/SuggestionList'
@@ -19,8 +16,10 @@ import VehicleSelection from '../components/home/VehicleSelection'
 import ConfirmRide from '../components/home/ConfirmRide'
 import LookingForDriver from '../components/home/LookingFordriver'
 import WaitingForDriver from '../components/home/WaitingForDriver'
-import mapImage from '../assets/map.png'
+import LiveTracking from '../components/LiveTracking/LiveTracking'
 import { axiosInstance } from '../api/core/api'
+import { SocketContext } from '../context/SocketContext'
+import { UserContext } from '../context/UserContext'
 
 const Home = () => {
   const navigate = useNavigate()
@@ -36,11 +35,72 @@ const Home = () => {
   const [suggestions, setSuggestions] = useState([])
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false)
   const [fare, setFare] = useState({})
+  const [ride, setRide] = useState(null)
 
   const sheetRef = useRef(null)
   const dragStartY = useRef(0)
   const dragStartExpanded = useRef(false)
   const pointerState = useRef({ active: false })
+
+  const { socket, sendMessage, receiveMessage } = useContext(SocketContext);
+  const { user, setUser } = useContext(UserContext);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await axiosInstance.get('/api/users/profile');
+        if (response.data?.user) {
+          setUser(response.data.user);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user profile:', error);
+      }
+    };
+
+    if (!user?._id) {
+      fetchUserProfile();
+    }
+  }, [user, setUser]);
+
+  useEffect(() => {
+    if (!user?._id) return;
+
+    sendMessage("join", {
+      userId: user._id,
+      usertype: "user"
+    });
+
+    receiveMessage("message", (data) => {
+      console.log('Socket message received:', data);
+    });
+  }, [user?._id, sendMessage, receiveMessage]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleRideConfirmed = (confirmedRide) => {
+      console.log('🚖 Ride confirmed by captain:', confirmedRide);
+      setRide(confirmedRide);
+      setIsLookingForDriver(false);
+      setIsWaitingForDriver(true);
+      setIsExpanded(true);
+    };
+
+    socket.on('ride-confirmed', handleRideConfirmed);
+
+    const handleRideStarted = (startedRide) => {
+      console.log('🚖 Ride started by captain:', startedRide);
+      setIsWaitingForDriver(false);
+      navigate('/riding', { state: { ride: startedRide } });
+    };
+
+    socket.on('ride-started', handleRideStarted);
+
+    return () => {
+      socket.off('ride-confirmed', handleRideConfirmed);
+      socket.off('ride-started', handleRideStarted);
+    };
+  }, [socket, navigate]);
 
   useEffect(() => {
     const query = activeField === 'pickup' ? pickup : destination
@@ -79,16 +139,7 @@ const Home = () => {
     return undefined
   }, [isExpanded])
 
-  useEffect(() => {
-    if (!isLookingForDriver) return undefined
 
-    const timer = window.setTimeout(() => {
-      setIsLookingForDriver(false)
-      setIsWaitingForDriver(true)
-    }, 2800)
-
-    return () => window.clearTimeout(timer)
-  }, [isLookingForDriver])
 
   const expandSheet = () => setIsExpanded(true)
   const collapseSheet = () => setIsExpanded(false)
@@ -155,6 +206,7 @@ const Home = () => {
         vehicleType: vehicle?.id || confirmedVehicle?.id || 'car',
       })
       console.log('Ride created successfully:', response.data)
+      setRide(response.data)
       setConfirmedVehicle(vehicle)
       setIsLookingForDriver(true)
       setIsWaitingForDriver(false)
@@ -212,22 +264,12 @@ const Home = () => {
   return (
     <div className="h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
       <section className="relative h-[50vh] min-h-[340px] w-full overflow-hidden bg-[#e6e2db]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${mapImage})` }} aria-label="City map" />
-        <div className="absolute inset-0 bg-white/10" />
+        <LiveTracking className="h-full w-full" />
 
-        <div className="absolute left-[42%] top-[54%] z-10 h-32 w-1 origin-top rotate-[48deg] border-l-4 border-dashed border-[#256df0]" />
-        <div className="absolute left-[42%] top-[54%] z-10 h-14 w-14 -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#0054cb]/30 animate-ping" />
-        <div className="absolute left-[42%] top-[54%] z-10 flex h-6 w-6 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[2.5px] border-white bg-[#0054cb] shadow-md"><span className="h-2.5 w-2.5 rounded-full bg-white" /></div>
-        <div className="absolute left-[42%] top-[54%] z-10 -translate-x-1/2 -translate-y-[38px] whitespace-nowrap rounded-full bg-black px-2.5 py-1 text-[10px] font-semibold text-white shadow-md">You are here</div>
-        <FiTruck className="absolute left-[48%] top-[30%] z-10 rotate-[-15deg] rounded bg-[#1b1c1c] p-1 text-2xl text-white shadow" />
-        <FiTruck className="absolute left-[58%] top-[54%] z-10 rounded bg-[#1b1c1c] p-1 text-2xl text-white shadow" />
-        <FiMapPin className="absolute left-[76%] top-[18%] z-10 text-2xl text-black drop-shadow" />
-
-        <div className="absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pb-2 pt-4">
-          <button type="button" aria-label="Open menu" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-md transition active:scale-95"><FiMenu className="text-xl" /></button>
-          <button type="button" aria-label="User profile" className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-md transition active:scale-95"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"><FiUser className="text-[17px]" /></span></button>
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-between px-4 pb-2 pt-4">
+          <button type="button" aria-label="Open menu" className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-md transition active:scale-95"><FiMenu className="text-xl" /></button>
+          <button type="button" aria-label="User profile" className="pointer-events-auto flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-md transition active:scale-95"><span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white"><FiUser className="text-[17px]" /></span></button>
         </div>
-        <button type="button" aria-label="Recenter map" className="absolute bottom-4 right-4 z-20 flex h-11 w-11 items-center justify-center rounded-full border border-black/5 bg-white/95 shadow-lg backdrop-blur-sm transition active:scale-95"><FiTarget className="text-xl" /></button>
       </section>
 
       <section
@@ -245,6 +287,7 @@ const Home = () => {
           <div className="mb-3 flex items-center justify-between"><h2 className="text-[20px] font-bold tracking-[-0.02em]">Plan your trip</h2><button type="button" className="flex items-center gap-1 rounded-full bg-[#f3f1f0] px-3 py-1.5 text-[12px] font-semibold"><FiClock className="text-[13px]" /><span>Now</span><FiChevronDown className="text-[14px]" /></button></div>
           {isWaitingForDriver ? (
             <WaitingForDriver
+              ride={ride}
               pickup={pickup}
               destination={selectedDestination}
               vehicle={confirmedVehicle}
@@ -253,10 +296,10 @@ const Home = () => {
                 setIsLookingForDriver(true)
               }}
               onCancel={handleChooseAnotherLocation}
-              onStartRide={() => navigate('/riding')}
             />
           ) : isLookingForDriver ? (
             <LookingForDriver
+              ride={ride}
               pickup={pickup}
               destination={selectedDestination}
               vehicle={confirmedVehicle}

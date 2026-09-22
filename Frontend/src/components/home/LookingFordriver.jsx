@@ -3,14 +3,14 @@ import { gsap } from 'gsap'
 import { FiArrowLeft, FiCreditCard, FiMapPin, FiRadio } from 'react-icons/fi'
 import carImage from '../../assets/car.png'
 
-const LookingForDriver = ({ pickup, destination, vehicle, onBack }) => {
+const LookingForDriver = ({ ride, pickup, destination, vehicle, onBack }) => {
 	const rootRef = useRef(null)
 	const vehicleRef = useRef(null)
 	const progressRef = useRef(null)
 	const radioRef = useRef(null)
 	const rideVehicle = vehicle ?? {
 		name: 'UberGo',
-		price: '₹193.20',
+		price: `₹${ride?.fare || '193.20'}`,
 		image: carImage,
 	}
 
