@@ -4,7 +4,8 @@ import { io } from 'socket.io-client';
 
 export const SocketContext = createContext();
 
-const socket = io('http://localhost:3000');
+const SOCKET_URL = import.meta.env.VITE_BASE_URL || 'http://localhost:3000';
+const socket = io(SOCKET_URL);
 
 const SocketProvider = ({ children }) => {
 
