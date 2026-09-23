@@ -9,18 +9,24 @@ module.exports.authenticateUser = module.exports.authUser = async (req, res, nex
 
     if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
-
-
-    }
-
-    const isBlacklisted = await blacklistTokenModel.findOne({ token });
-    if (isBlacklisted) {
-        return res.status(401).json({ message: "Token is blacklisted" });
     }
 
     try {
+        const isBlacklisted = await blacklistTokenModel.findOne({ token });
+        if (isBlacklisted) {
+            return res.status(401).json({ message: "Token is blacklisted" });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role && decoded.role !== 'user') {
+            return res.status(401).json({ message: "Unauthorized: Invalid role" });
+        }
+
         const user = await userModel.findById(decoded._id);
+        if (!user) {
+            return res.status(401).json({ message: "User not found" });
+        }
+
         req.user = user;
         next();
     } catch (error) {
@@ -33,18 +39,24 @@ module.exports.authCaptain = async (req, res, next) => {
 
     if (!token) {
         return res.status(401).json({ message: "Unauthorized" });
-
-
-    }
-
-    const isBlacklisted = await blacklistTokenModel.findOne({ token });
-    if (isBlacklisted) {
-        return res.status(401).json({ message: "Token is blacklisted" });
     }
 
     try {
+        const isBlacklisted = await blacklistTokenModel.findOne({ token });
+        if (isBlacklisted) {
+            return res.status(401).json({ message: "Token is blacklisted" });
+        }
+
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (decoded.role && decoded.role !== 'captain') {
+            return res.status(401).json({ message: "Unauthorized: Invalid role" });
+        }
+
         const captain = await captainModel.findById(decoded._id);
+        if (!captain) {
+            return res.status(401).json({ message: "Captain not found" });
+        }
+
         req.captain = captain;
         next();
     } catch (error) {

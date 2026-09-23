@@ -20,8 +20,7 @@ const CaptainLogout = () => {
           setError(requestError.response?.data?.message || 'Session ended locally.')
         }
       } finally {
-        tokenStorage.captain.clear()
-        tokenStorage.user.clear()
+        tokenStorage.clear()
         setCaptain({
           email: '',
           fullName: {
@@ -29,8 +28,6 @@ const CaptainLogout = () => {
             lastName: '',
           },
         })
-
-        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
 
         if (isMounted) {
           navigate('/captain-login', { replace: true })

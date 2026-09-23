@@ -34,8 +34,13 @@ const userSchema = new mongoose.Schema({
 
 
 userSchema.methods.generateAuthToken = function () {
-    const token = jsonwebtoken.sign({ _id: this._id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+    const token = jsonwebtoken.sign({ _id: this._id, role: 'user' }, process.env.JWT_SECRET, { expiresIn: '15m' });
     return token;
+}
+
+userSchema.methods.generateRefreshToken = function () {
+    const refreshToken = jsonwebtoken.sign({ _id: this._id, role: 'user' }, process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET, { expiresIn: '7d' });
+    return refreshToken;
 }
 
 userSchema.methods.comparePassword = async function (password) {

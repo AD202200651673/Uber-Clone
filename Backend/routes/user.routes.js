@@ -25,6 +25,8 @@ router.post(
 
 router.get("/profile", authMiddleware.authenticateUser, userController.getUserProfile);
 
+router.post("/refresh-token", userController.refreshToken);
+
 router.post("/logout", authMiddleware.authenticateUser, userController.logoutUser);
 
 

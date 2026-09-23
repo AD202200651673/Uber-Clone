@@ -14,10 +14,10 @@ export const useAuth = () => {
       const data = await request()
       if (data.token) {
         if (tokenType === 'captain') {
-          tokenStorage.captain.set(data.token)
+          tokenStorage.captain.set(data.token, data.refreshToken)
           tokenStorage.user.clear()
         } else {
-          tokenStorage.user.set(data.token)
+          tokenStorage.user.set(data.token, data.refreshToken)
           tokenStorage.captain.clear()
         }
       }

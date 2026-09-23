@@ -12,7 +12,7 @@ router.post('/register', [
     body('vehicle.color').isLength({ min: 3 }).withMessage('Vehicle color must be at least 3 characters long'),
     body('vehicle.plate').isLength({ min: 3 }).withMessage('Vehicle plate must be at least 3 characters long'),
     body('vehicle.capacity').isInt({ min: 1 }).withMessage('Vehicle capacity must be at least 1'),
-    body('vehicle.vehicleType').isIn(['car', 'bike', 'van']).withMessage('Vehicle type must be either car, bike, or van')
+    body('vehicle.vehicleType').isIn(['car', 'motorcycle', 'auto']).withMessage('Vehicle type must be either car, motorcycle, or auto')
 ], captainController.registerCaptain
 )
 
@@ -25,7 +25,9 @@ router.post('/login',[
 
 router.get('/profile', authMiddleware.authCaptain, captainController.getCaptainProfile)
 
-router.get('/logout', authMiddleware.authCaptain, captainController.logoutCaptain)
+router.post('/refresh-token', captainController.refreshToken)
+
+router.post('/logout', authMiddleware.authCaptain, captainController.logoutCaptain)
 
 
 

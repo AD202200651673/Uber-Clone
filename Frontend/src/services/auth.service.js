@@ -1,5 +1,6 @@
 import { axiosInstance } from '../api/core/api'
 import { API_ENDPOINTS } from '../api/core/endpoints'
+import { tokenStorage } from '../utils/storage'
 
 export const authService = {
   registerUser: async ({ firstName, lastName, email, password }) => {
@@ -17,8 +18,18 @@ export const authService = {
     return data
   },
 
+  refreshUserToken: async () => {
+    const refreshToken = tokenStorage.user.getRefreshToken()
+    const { data } = await axiosInstance.post(API_ENDPOINTS.users.refreshToken, { refreshToken })
+    if (data?.token) {
+      tokenStorage.user.set(data.token)
+    }
+    return data
+  },
+
   logoutUser: async () => {
-    const { data } = await axiosInstance.post(API_ENDPOINTS.users.logout)
+    const refreshToken = tokenStorage.user.getRefreshToken()
+    const { data } = await axiosInstance.post(API_ENDPOINTS.users.logout, { refreshToken })
     return data
   },
 
@@ -52,8 +63,18 @@ export const authService = {
     return data
   },
 
+  refreshCaptainToken: async () => {
+    const refreshToken = tokenStorage.captain.getRefreshToken()
+    const { data } = await axiosInstance.post(API_ENDPOINTS.captains.refreshToken, { refreshToken })
+    if (data?.token) {
+      tokenStorage.captain.set(data.token)
+    }
+    return data
+  },
+
   logoutCaptain: async () => {
-    const { data } = await axiosInstance.get(API_ENDPOINTS.captains.logout)
+    const refreshToken = tokenStorage.captain.getRefreshToken()
+    const { data } = await axiosInstance.post(API_ENDPOINTS.captains.logout, { refreshToken })
     return data
   },
 }
