@@ -14,43 +14,43 @@ const CaptainDetails = ({ captain }) => {
   const capacity = captain?.vehicle?.capacity || 1
 
   return (
-    <div className="flex flex-col min-h-full">
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
+    <div className="flex flex-col min-h-full pb-2">
+      <div className="mb-3.5 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
             {initials}
           </div>
-          <div>
-            <p className="text-[16px] font-bold">{captainName}</p>
-            <p className="text-[12px] text-[#5e5e5e]">{vehicleType} · {plateNumber}</p>
+          <div className="min-w-0">
+            <p className="truncate text-[15px] sm:text-[16px] font-bold text-[#1b1c1c]">{captainName}</p>
+            <p className="truncate text-[11px] sm:text-[12px] text-[#5e5e5e]">{vehicleType} · {plateNumber}</p>
           </div>
         </div>
-        <div className="text-right">
-          <p className="text-[18px] font-bold">₹0.00</p>
-          <p className="text-[11px] text-[#8f8f8f]">Today's Earned</p>
+        <div className="shrink-0 text-right">
+          <p className="text-[17px] sm:text-[18px] font-bold text-[#1b1c1c]">₹0.00</p>
+          <p className="text-[10px] sm:text-[11px] text-[#8f8f8f]">Today's Earned</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-3 divide-x divide-black/10 rounded-xl bg-[#ffd83d] py-4">
-        <div className="text-center">
-          <FiClock className="mx-auto mb-2 text-xl" />
-          <p className="text-[16px] font-bold">10.2</p>
-          <p className="mt-1 text-[9px] font-semibold uppercase text-black/60">Hours Online</p>
+      <div className="grid grid-cols-3 divide-x divide-black/10 rounded-xl bg-[#ffd83d] py-3 sm:py-4">
+        <div className="text-center px-1">
+          <FiClock className="mx-auto mb-1 text-lg sm:text-xl" />
+          <p className="text-[14px] sm:text-[16px] font-bold">10.2</p>
+          <p className="mt-0.5 text-[8.5px] sm:text-[9px] font-semibold uppercase text-black/60">Hours Online</p>
         </div>
-        <div className="text-center">
-          <FiTruck className="mx-auto mb-2 text-xl" />
-          <p className="text-[16px] font-bold">{vehicleType}</p>
-          <p className="mt-1 text-[9px] font-semibold uppercase text-black/60">{capacity} {capacity === 1 ? 'Seat' : 'Seats'}</p>
+        <div className="text-center px-1">
+          <FiTruck className="mx-auto mb-1 text-lg sm:text-xl" />
+          <p className="truncate text-[14px] sm:text-[16px] font-bold">{vehicleType}</p>
+          <p className="mt-0.5 text-[8.5px] sm:text-[9px] font-semibold uppercase text-black/60">{capacity} {capacity === 1 ? 'Seat' : 'Seats'}</p>
         </div>
-        <div className="text-center">
-          <FiMapPin className="mx-auto mb-2 text-xl" />
-          <p className="text-[16px] font-bold truncate px-1">{plateNumber}</p>
-          <p className="mt-1 text-[9px] font-semibold uppercase text-black/60">Plate No.</p>
+        <div className="text-center px-1">
+          <FiMapPin className="mx-auto mb-1 text-lg sm:text-xl" />
+          <p className="truncate text-[13px] sm:text-[15px] font-bold">{plateNumber}</p>
+          <p className="mt-0.5 text-[8.5px] sm:text-[9px] font-semibold uppercase text-black/60">Plate No.</p>
         </div>
       </div>
 
       <div className="mt-3 flex items-center justify-between rounded-xl border border-[#eeeeee] bg-white px-3 py-2.5 text-[12px]">
-        <span className="flex items-center gap-2 text-[#5e5e5e]"><FiUser /> Vehicle & Status</span>
+        <span className="flex items-center gap-2 text-[#5e5e5e]"><FiUser size={14} /> Vehicle & Status</span>
         <span className="font-semibold text-[#0e8345]">Verified · Active</span>
       </div>
     </div>

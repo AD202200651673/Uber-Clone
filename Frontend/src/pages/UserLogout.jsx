@@ -43,8 +43,8 @@ const UserLogout = () => {
   }, [navigate, setUser])
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-white px-4 text-[#1b1c1c]">
-      <p className="text-sm text-[#5e5e5e]">
+    <main className="flex min-h-[100dvh] items-center justify-center bg-white px-4 text-[#1b1c1c]">
+      <p className="text-sm font-medium text-[#5e5e5e]">
         {error || 'Signing you out...'}
       </p>
     </main>

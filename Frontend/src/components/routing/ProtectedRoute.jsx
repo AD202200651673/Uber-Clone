@@ -58,7 +58,7 @@ const ProtectedRoute = ({ children, role = 'user' }) => {
   }, [location.pathname, role])
 
   if (status === 'checking') {
-    return <div className="flex min-h-screen items-center justify-center bg-white text-sm text-[#5e5e5e]">Checking access...</div>
+    return <div className="flex min-h-[100dvh] items-center justify-center bg-white text-sm font-medium text-[#5e5e5e]">Checking access...</div>
   }
 
   if (status === 'allowed') {

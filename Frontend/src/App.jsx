@@ -15,7 +15,7 @@ import CaptainRiding from './pages/CaptainRiding'
 
 const App = () => {
   return (
-    <div>
+    <div className="flex min-h-[100dvh] w-full flex-col bg-white">
       <Routes>
         <Route path='/' element={<Start />} />
         <Route path='/login' element={<UserLogin />} />

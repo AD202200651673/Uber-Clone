@@ -121,20 +121,20 @@ const CaptainHome = () => {
   };
 
   return (
-    <main className="relative h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
+    <main className="relative h-[100dvh] w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
       <section className="relative h-full w-full overflow-hidden bg-[#e6e2db]">
         <LiveTracking className="h-full w-full" />
 
         {/* Top Header Floating Profile Button */}
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-start px-4 pb-2 pt-4">
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-start px-3.5 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-5">
           <div className="relative pointer-events-auto">
             <button
               type="button"
               aria-label="Captain profile"
               onClick={() => setShowProfileMenu((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95 hover:bg-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-sm transition active:scale-95 hover:bg-white"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white">
                 <FiUser className="text-[16px]" />
               </span>
             </button>
@@ -142,12 +142,12 @@ const CaptainHome = () => {
             {showProfileMenu && (
               <>
                 <div
-                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+                  className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px]"
                   onClick={() => setShowProfileMenu(false)}
                 />
-                <div className="absolute left-0 top-12 z-50 w-64 rounded-2xl border border-black/5 bg-white p-3 shadow-2xl">
+                <div className="absolute left-0 top-13 z-50 w-[calc(100vw-2.5rem)] max-w-xs sm:w-64 rounded-2xl border border-black/5 bg-white p-3.5 shadow-2xl">
                   <div className="flex items-center gap-3 border-b border-neutral-100 pb-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
                       {captain?.fullName?.firstName ? captain.fullName.firstName[0].toUpperCase() : 'C'}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -165,7 +165,7 @@ const CaptainHome = () => {
                         setShowProfileMenu(false)
                         navigate('/captain-logout')
                       }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
                     >
                       <FiLogOut className="text-[16px]" />
                       <span>Log out</span>

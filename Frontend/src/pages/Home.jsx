@@ -216,21 +216,21 @@ const Home = () => {
   }
 
   return (
-    <div className="h-screen w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
+    <div className="h-[100dvh] w-full overflow-hidden bg-[#f0ede8] text-[#1b1c1c]">
       {/* Live Map Area */}
       <section className="relative h-full w-full overflow-hidden bg-[#e6e2db]">
         <LiveTracking className="h-full w-full" />
 
-        {/* Top Header Floating Controls */}
-        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-start px-4 pb-2 pt-4">
+        {/* Top Header Floating Controls with Safe Area Insets */}
+        <div className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-center justify-start px-3.5 pt-[max(0.75rem,env(safe-area-inset-top,0px))] sm:px-5">
           <div className="relative pointer-events-auto">
             <button
               type="button"
               aria-label="User profile"
               onClick={() => setShowProfileMenu((prev) => !prev)}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-md backdrop-blur-md transition active:scale-95 hover:bg-white"
+              className="flex h-11 w-11 items-center justify-center rounded-full bg-white/95 shadow-md backdrop-blur-md transition active:scale-95 hover:bg-white"
             >
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-black text-white">
+              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black text-white">
                 <FiUser className="text-[17px]" />
               </span>
             </button>
@@ -238,12 +238,12 @@ const Home = () => {
             {showProfileMenu && (
               <>
                 <div
-                  className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[1px]"
+                  className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px]"
                   onClick={() => setShowProfileMenu(false)}
                 />
-                <div className="absolute left-0 top-12 z-50 w-64 rounded-2xl border border-black/5 bg-white p-3 shadow-2xl">
+                <div className="absolute left-0 top-13 z-50 w-[calc(100vw-2.5rem)] max-w-xs sm:w-64 rounded-2xl border border-black/5 bg-white p-3.5 shadow-2xl">
                   <div className="flex items-center gap-3 border-b border-neutral-100 pb-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black text-sm font-bold text-white">
                       {user?.fullName?.firstName ? user.fullName.firstName[0].toUpperCase() : 'U'}
                     </div>
                     <div className="min-w-0 flex-1">
@@ -261,7 +261,7 @@ const Home = () => {
                         setShowProfileMenu(false)
                         navigate('/user-logout')
                       }}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
                     >
                       <FiLogOut className="text-[16px]" />
                       <span>Log out</span>
@@ -274,35 +274,35 @@ const Home = () => {
         </div>
       </section>
 
-      {/* 3-Stage Bottom Sheet Component */}
+      {/* 3-Stage Responsive Bottom Sheet Component */}
       <BottomSheet snapPoint={snapPoint} onSnapChange={setSnapPoint}>
-        {/* Peek State Quick Bar (Visible only in Peek Mode when no active ride) */}
+        {/* Peek State Quick Bar */}
         {snapPoint === SNAP_POINTS.PEEK && !isWaitingForDriver && !isLookingForDriver && !confirmedVehicle && !selectedDestination && (
           <button
             type="button"
             onClick={() => setSnapPoint(SNAP_POINTS.FULL)}
             className="mt-1 flex w-full items-center justify-between rounded-2xl bg-white p-3.5 shadow-sm ring-1 ring-black/5 transition hover:bg-neutral-50 active:scale-[0.99]"
           >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[#0054cb]/10 text-[#0054cb]">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#0054cb]/10 text-[#0054cb]">
                 <FiSearch className="text-[17px]" />
               </div>
-              <div className="text-left">
-                <p className="text-[14px] font-bold text-[#1b1c1c]">Where to?</p>
-                <p className="text-[11px] text-[#716e6b]">Tap to plan your ride & see fares</p>
+              <div className="min-w-0 text-left">
+                <p className="truncate text-[14px] font-bold text-[#1b1c1c]">Where to?</p>
+                <p className="truncate text-[11px] text-[#716e6b]">Tap to plan your ride & see fares</p>
               </div>
             </div>
-            <span className="rounded-full bg-[#f3f1f0] px-3 py-1 text-[11px] font-semibold text-[#1b1c1c]">
+            <span className="shrink-0 rounded-full bg-[#f3f1f0] px-3 py-1 text-[11px] font-semibold text-[#1b1c1c]">
               Search
             </span>
           </button>
         )}
 
-        {/* Main Flow Content (Half & Full views or active ride states) */}
+        {/* Main Flow Content */}
         {(snapPoint !== SNAP_POINTS.PEEK || isWaitingForDriver || isLookingForDriver || confirmedVehicle || selectedDestination) && (
           <>
             <div className="mb-3">
-              <h2 className="text-[20px] font-bold tracking-[-0.02em]">Plan your trip</h2>
+              <h2 className="text-[19px] sm:text-[21px] font-bold tracking-tight">Plan your trip</h2>
             </div>
 
             {isWaitingForDriver ? (
@@ -346,8 +346,8 @@ const Home = () => {
               />
             ) : (
               <>
-                <div className="relative flex items-stretch gap-2.5 rounded-[20px] bg-[#f3f1f0] p-3 shadow-inner">
-                  <div className="flex w-4 flex-col items-center justify-between py-2.5">
+                <div className="relative flex items-stretch gap-2 rounded-[20px] bg-[#f3f1f0] p-2.5 sm:gap-2.5 sm:p-3 shadow-inner">
+                  <div className="flex w-3.5 sm:w-4 flex-col items-center justify-between py-2.5">
                     <div className="h-2.5 w-2.5 rounded-full bg-[#0054cb] ring-4 ring-[#dfeafb]" />
                     <div className="my-1 h-8 w-0.5 bg-[#d9d5d2]" />
                     <div className="h-2.5 w-2.5 rounded-sm bg-[#1b1c1c]" />
@@ -365,10 +365,10 @@ const Home = () => {
                           }}
                           onChange={handlePickupChange}
                           placeholder="Pickup location"
-                          className="w-full bg-transparent text-[15px] font-medium outline-none placeholder:text-[#999]"
+                          className="w-full bg-transparent text-[16px] sm:text-[15px] font-medium outline-none placeholder:text-[#999]"
                         />
                       </div>
-                      <FiNavigation className="ml-3 text-[18px] text-[#5e5e5e]" />
+                      <FiNavigation className="ml-2 shrink-0 text-[18px] text-[#5e5e5e]" />
                     </div>
                     <div className="flex items-center justify-between rounded-xl bg-white px-3 py-2.5 shadow-sm ring-1 ring-black/5">
                       <div className="min-w-0 flex-1">
@@ -382,13 +382,13 @@ const Home = () => {
                           }}
                           onChange={handleDestinationChange}
                           placeholder="Where to?"
-                          className="w-full bg-transparent text-[15px] font-medium placeholder:text-[#8f8f8f] outline-none"
+                          className="w-full bg-transparent text-[16px] sm:text-[15px] font-medium placeholder:text-[#8f8f8f] outline-none"
                         />
                       </div>
-                      <FiSearch className="ml-3 text-[18px]" />
+                      <FiSearch className="ml-2 shrink-0 text-[18px]" />
                     </div>
                   </div>
-                  <div className="flex flex-col items-center justify-around pl-1">
+                  <div className="flex flex-col items-center justify-around pl-0.5">
                     <button
                       type="button"
                       aria-label="Swap locations"
@@ -399,14 +399,14 @@ const Home = () => {
                       }}
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb] transition active:scale-95 hover:bg-[#e4e0de]"
                     >
-                      <FiRepeat />
+                      <FiRepeat size={14} />
                     </button>
                     <button
                       type="button"
                       aria-label="Add stop"
                       className="flex h-8 w-8 items-center justify-center rounded-full bg-[#efeceb] transition active:scale-95 hover:bg-[#e4e0de]"
                     >
-                      <FiPlus />
+                      <FiPlus size={14} />
                     </button>
                   </div>
                 </div>
@@ -414,7 +414,7 @@ const Home = () => {
                 <button
                   type="button"
                   onClick={handleFindTrip}
-                  className="mt-4 flex h-12 w-full items-center justify-center rounded-xl bg-black text-sm font-semibold text-white shadow-md transition active:scale-[0.99] hover:bg-neutral-800"
+                  className="mt-4 flex min-h-[48px] h-12 w-full items-center justify-center rounded-xl bg-black text-sm font-semibold text-white shadow-md transition active:scale-[0.99] hover:bg-neutral-800"
                 >
                   Find Trip
                 </button>

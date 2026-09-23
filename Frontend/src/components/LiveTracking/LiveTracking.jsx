@@ -169,7 +169,7 @@ const LiveTracking = ({ className = 'h-full w-full' }) => {
 
       {/* Geolocation Status Badge (Centered top toast) */}
       {isLocating && (
-        <div className="pointer-events-none absolute left-1/2 top-4 z-30 -translate-x-1/2 flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-[#1b1c1c] shadow-lg backdrop-blur-md">
+        <div className="pointer-events-none absolute left-1/2 top-[max(1rem,env(safe-area-inset-top,0px))] z-30 -translate-x-1/2 flex items-center gap-2 rounded-full bg-white/95 px-3.5 py-1.5 text-xs font-semibold text-[#1b1c1c] shadow-lg backdrop-blur-md">
           <FiNavigation className="animate-spin text-blue-600 text-sm" />
           <span>Locating your position...</span>
         </div>
