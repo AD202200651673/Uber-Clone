@@ -60,7 +60,7 @@ const CaptainSignup = () => {
       });
 
       setCaptain(captain);
-      navigate("/captain-home");
+      navigate("/captain-home", { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, "Registration failed. Please try again."));
     }

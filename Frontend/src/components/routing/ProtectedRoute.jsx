@@ -2,12 +2,22 @@ import React, { useEffect, useState } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { axiosInstance } from '../../api/core/api'
 import { API_ENDPOINTS } from '../../api/core/endpoints'
+import { tokenStorage } from '../../utils/storage'
 
 const ProtectedRoute = ({ children, role = 'user' }) => {
   const location = useLocation()
-  const [status, setStatus] = useState('checking')
+  const userToken = tokenStorage.user.get()
+  const captainToken = tokenStorage.captain.get()
+  const hasToken = !!(userToken || captainToken)
+
+  const [status, setStatus] = useState(() => (hasToken ? 'checking' : 'unauthenticated'))
 
   useEffect(() => {
+    if (!hasToken) {
+      setStatus('unauthenticated')
+      return
+    }
+
     let isMounted = true
 
     const verifyRole = async () => {
@@ -42,9 +52,11 @@ const ProtectedRoute = ({ children, role = 'user' }) => {
             return
           }
 
+          tokenStorage.clear()
           setStatus(role === 'user' ? 'redirect-login' : 'redirect-captain-login')
         } catch {
           if (!isMounted) return
+          tokenStorage.clear()
           setStatus(role === 'user' ? 'redirect-login' : 'redirect-captain-login')
         }
       }
@@ -55,7 +67,11 @@ const ProtectedRoute = ({ children, role = 'user' }) => {
     return () => {
       isMounted = false
     }
-  }, [location.pathname, role])
+  }, [location.pathname, role, hasToken])
+
+  if (!hasToken || status === 'unauthenticated') {
+    return <Navigate to={role === 'user' ? '/login' : '/captain-login'} replace state={{ from: location }} />
+  }
 
   if (status === 'checking') {
     return <div className="flex min-h-[100dvh] items-center justify-center bg-white text-sm font-medium text-[#5e5e5e]">Checking access...</div>

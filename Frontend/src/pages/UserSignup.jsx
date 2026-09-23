@@ -49,7 +49,7 @@ const UserSignup = () => {
         password: formData.password,
       });
       setUser(user);
-      navigate("/home");
+      navigate("/home", { replace: true });
     } catch (requestError) {
       setError(getApiErrorMessage(requestError, "Registration failed. Please try again."));
     }

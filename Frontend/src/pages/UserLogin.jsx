@@ -27,7 +27,7 @@ const UserLogin = () => {
 
     loginUser(formData, (response) => {
       setUser(response.user)
-      navigate('/home')
+      navigate('/home', { replace: true })
     }).catch((requestError) => {
       setError(getApiErrorMessage(requestError, 'Sign in failed. Please try again.'))
     })
@@ -40,7 +40,7 @@ const UserLogin = () => {
           <button
             type="button"
             aria-label="Go back"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-700 transition hover:bg-[#f6f6f6] active:scale-95"
           >
             <FiArrowLeft size={20} />

@@ -35,7 +35,7 @@ const CaptainLogin = () => {
 
     loginCaptain(formData, (response) => {
       setCaptain(response.captain);
-      navigate("/captain-home");
+      navigate("/captain-home", { replace: true });
     }).catch((requestError) => {
       setError(getApiErrorMessage(requestError, "Sign in failed. Please try again."));
     });
@@ -48,7 +48,7 @@ const CaptainLogin = () => {
           <button
             type="button"
             aria-label="Go back"
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="flex h-10 w-10 items-center justify-center rounded-xl text-neutral-700 transition hover:bg-[#f6f6f6] active:scale-95"
           >
             <FiArrowLeft size={20} />

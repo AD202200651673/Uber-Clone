@@ -20,7 +20,8 @@ const UserLogout = () => {
           setError(requestError.response?.data?.message || 'Session ended locally.')
         }
       } finally {
-        tokenStorage.user.clear()
+        tokenStorage.clear()
+        document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
         setUser({
           email: '',
           fullName: {

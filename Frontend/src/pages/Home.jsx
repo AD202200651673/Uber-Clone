@@ -259,7 +259,7 @@ const Home = () => {
                       type="button"
                       onClick={() => {
                         setShowProfileMenu(false)
-                        navigate('/user-logout')
+                        navigate('/user-logout', { replace: true })
                       }}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-rose-600 transition hover:bg-rose-50 active:scale-[0.98]"
                     >
