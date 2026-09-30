@@ -1,1085 +1,248 @@
-# Uber Clone Backend
+# 🚗 Uber Clone
 
-## Register User
+A full-stack ride-hailing app inspired by Uber. Riders can search locations, compare fares, and book a ride, while captains (drivers) receive live ride requests, accept them, verify the rider with an OTP, and complete the trip. Ride updates are pushed to both sides in real time with Socket.IO, and maps are powered by Mapbox.
 
-Creates a new user account and returns an authentication token.
+Built with **React 19 + Vite** on the frontend and **Node.js + Express 5 + MongoDB** on the backend.
 
-### Endpoint
+---
+
+## ✨ Features
+
+### For Riders (Users)
+- Sign up / log in with JWT authentication
+- Search pickup and destination with live address autocomplete
+- See estimated fares for **Car, Auto, and Motorcycle** before booking
+- Request a ride and get a 4-digit **OTP** to share with the captain
+- Real-time updates when a captain accepts, starts, or ends the ride
+- Live map tracking of your current location
+
+### For Captains (Drivers)
+- Separate captain sign up / login with vehicle details (color, plate, capacity, type)
+- Receive new ride requests instantly over WebSockets
+- Accept a ride and start it by verifying the rider's OTP
+- Finish the ride and view trip details
+- Live location updates shared with the server
+
+### General
+- Role-based protected routes (user vs. captain)
+- Access + refresh token flow with token blacklisting on logout
+- Fare calculation based on base fare, distance, and duration
+- Responsive, mobile-first UI with animated bottom sheets (GSAP)
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+| Category | Technologies |
+| --- | --- |
+| Framework | React 19, Vite |
+| Routing | React Router v7 |
+| Styling | Tailwind CSS 4, React Icons |
+| Maps | Mapbox GL JS |
+| Real-time | Socket.IO Client |
+| Animation | GSAP |
+| HTTP | Axios |
+
+### Backend
+| Category | Technologies |
+| --- | --- |
+| Runtime & Framework | Node.js, Express 5 |
+| Database | MongoDB with Mongoose |
+| Auth | JSON Web Tokens, bcrypt, cookie-parser |
+| Validation | express-validator |
+| Real-time | Socket.IO |
+| Maps & Routing | Mapbox Geocoding, Directions & Search APIs |
+
+---
+
+## 📁 Project Structure
+
+```
+Uber-Clone/
+├── Backend/
+│   ├── controllers/        # Request handlers (user, captain, ride, maps)
+│   ├── services/           # Business logic (fare, OTP, Mapbox calls)
+│   ├── models/             # Mongoose models (User, Captain, Ride, BlacklistToken)
+│   ├── routes/             # API routes
+│   ├── middlewares/        # Auth middleware
+│   ├── db/                 # MongoDB connection
+│   ├── socket.js           # Socket.IO setup
+│   ├── app.js              # Express app
+│   └── server.js           # Server entry point
+│
+└── Frontend/
+    └── src/
+        ├── pages/          # Start, Login/Signup, Home, Riding, Captain pages
+        ├── components/     # Home, captain, auth, routing, LiveTracking, common
+        ├── context/        # User, Captain & Socket contexts
+        ├── api/            # Axios instance & endpoints
+        ├── services/       # Auth service
+        ├── hooks/          # useAuth
+        ├── validators/     # Form validation
+        └── utils/          # Storage helpers
+```
+
+---
+
+## 🔄 How a Ride Works
+
+1. **Rider** enters pickup & destination → the app fetches fares for each vehicle type
+2. **Rider** confirms → a ride is created with status `pending` and a 4-digit OTP
+3. Nearby **captains** receive the request (`new-ride` event)
+4. A **captain** accepts → rider is notified (`ride-confirmed`)
+5. Captain enters the rider's OTP to begin → status becomes `ongoing` (`ride-started`)
+6. Captain finishes the trip → status becomes `completed` (`ride-ended`)
+
+**Fare formula:** `base fare + (distance in km × per-km rate) + (duration in min × per-minute rate)`
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- [Node.js](https://nodejs.org/) (v20 or later recommended)
+- [MongoDB](https://www.mongodb.com/) (local or Atlas)
+- A [Mapbox](https://www.mapbox.com/) access token
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/AD202200651673/Uber-Clone.git
+cd Uber-Clone
+```
+
+### 2. Set up the backend
+
+```bash
+cd Backend
+npm install
+```
+
+Create a `.env` file in `Backend/`:
+
+```env
+PORT=3000
+MONGO_URI=mongodb://localhost:27017/uber-clone
+JWT_SECRET=your_jwt_secret
+JWT_REFRESH_SECRET=your_refresh_token_secret
+MAPBOX_PUBLIC_API=your_mapbox_access_token
+```
+
+Start the server:
+
+```bash
+npm run dev
+```
+
+The API runs at `http://localhost:3000`.
+
+### 3. Set up the frontend
+
+```bash
+cd Frontend
+npm install
+```
+
+Create a `.env` file in `Frontend/`:
+
+```env
+VITE_MAPBOX_TOKEN=your_mapbox_access_token
+VITE_BASE_URL=http://localhost:3000
+```
+
+Start the dev server:
+
+```bash
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173) in your browser. In development, Vite proxies `/api` requests to the backend.
+
+---
+
+## 📜 Available Scripts
+
+### Backend (`/Backend`)
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the server with nodemon |
+| `npm start` | Start the server with Node |
+
+### Frontend (`/Frontend`)
+| Command | Description |
+| --- | --- |
+| `npm run dev` | Start the Vite dev server |
+| `npm run build` | Create a production build |
+| `npm run preview` | Preview the production build |
+| `npm run lint` | Run ESLint |
+
+---
+
+## 🔌 API Overview
+
+Protected routes need a JWT sent as `Authorization: Bearer <token>` or in the `token` cookie.
+
+| Resource | Endpoints |
+| --- | --- |
+| **Users** | `POST /api/users/register` · `POST /api/users/login` · `GET /api/users/profile` · `POST /api/users/refresh-token` · `POST /api/users/logout` |
+| **Captains** | `POST /api/captains/register` · `POST /api/captains/login` · `GET /api/captains/profile` · `POST /api/captains/refresh-token` · `POST /api/captains/logout` |
+| **Maps** | `GET /api/maps/get-coordinates` · `GET /api/maps/get-distance-time` · `GET /api/maps/get-suggestions` |
+| **Rides** | `POST /api/rides/create` · `GET /api/rides/get-fare` · `POST /api/rides/confirm-ride` · `GET /api/rides/start-ride` · `POST /api/rides/end-ride` |
+
+### Example: Register a user
 
 ```http
 POST /api/users/register
-```
-
-The server expects JSON in the request body:
-
-```http
 Content-Type: application/json
-```
 
-### Request Body
-
-```json
 {
-  "fullName": {
-    "firstName": "John",
-    "lastName": "Doe"
-  },
+  "fullName": { "firstName": "John", "lastName": "Doe" },
   "email": "john.doe@example.com",
   "password": "secret123"
 }
 ```
 
-### Required Data
+### Example: Get fares
 
-| Field | Type | Requirements |
+```http
+GET /api/rides/get-fare?pickup=Bhopal Railway Station&destination=DB City Mall Bhopal
+```
+
+```json
+{ "auto": 118, "car": 193, "motorcycle": 65 }
+```
+
+---
+
+## 📡 Socket Events
+
+| Event | Direction | Description |
 | --- | --- | --- |
-| `fullName.firstName` | string | Required; at least 3 characters |
-| `fullName.lastName` | string | Required; at least 3 characters |
-| `email` | string | Required; must be a valid email address |
-| `password` | string | Required; at least 6 characters |
+| `join` | Client → Server | Registers the user/captain's socket ID |
+| `update-location-captain` | Client → Server | Captain sends live location |
+| `new-ride` | Server → Captain | New ride request |
+| `ride-confirmed` | Server → User | Captain accepted the ride |
+| `ride-started` | Server → User | Ride started after OTP verification |
+| `ride-ended` | Server → User | Ride completed |
 
-The password is hashed before the user is stored. Do not send a pre-hashed password.
+---
 
-### Success Response
+## 🤝 Contributing
 
-**Status: `201 Created`**
+Contributions, issues, and feature requests are welcome. Feel free to open an issue or submit a pull request.
 
-```json
-{
-  "message": "User registered successfully",
-  "user": {
-    "_id": "user-id",
-    "fullName": {
-      "firstName": "John",
-      "lastName": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "socketId": null
-  },
-  "token": "jwt-token"
-}
-```
+---
 
-The password is hashed before storage. The current controller returns the newly created user document, so response sanitization should be added before exposing this endpoint in production.
+## 📄 License
 
-### Validation Error
+This project is licensed under the ISC License.
 
-**Status: `400 Bad Request`**
+---
 
-Returned when one or more fields do not satisfy the validation rules.
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "value": "ab",
-      "msg": "First name must be at least 3 characters long",
-      "path": "fullName.firstName",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `201 Created` | User registered successfully |
-| `400 Bad Request` | Request data failed validation |
-| `500 Internal Server Error` | Unexpected database or server error |
-
-## Register Captain
-
-Creates a new captain account and returns an authentication token.
-
-### Endpoint
-
-```http
-POST /api/captains/register
-```
-
-The server expects JSON in the request body:
-
-```http
-Content-Type: application/json
-```
-
-### Request Body
-
-```json
-{
-  "fullName": {
-    "firstName": "Ali",
-    "lastName": "Khan"
-  },
-  "email": "ali.khan@example.com",
-  "password": "secret123",
-  "vehicle": {
-    "color": "Black",
-    "plate": "ABC-123",
-    "capacity": 4,
-    "vehicleType": "car"
-  }
-}
-```
-
-### Required Data
-
-| Field | Type | Requirements |
-| --- | --- | --- |
-| `fullName.firstName` | string | Required; at least 3 characters |
-| `fullName.lastName` | string | Optional but validated if provided; at least 3 characters |
-| `email` | string | Required; must be a valid email address |
-| `password` | string | Required; at least 6 characters |
-| `vehicle.color` | string | Required; at least 3 characters |
-| `vehicle.plate` | string | Required; at least 3 characters |
-| `vehicle.capacity` | number | Required; must be an integer greater than or equal to 1 |
-| `vehicle.vehicleType` | string | Required; must be one of `car`, `bike`, or `van` |
-
-The password is hashed before the captain is stored.
-
-### Success Response
-
-**Status: `201 Created`**
-
-```json
-{
-  "token": "jwt-token",
-  "captain": {
-    "_id": "captain-id",
-    "fullName": {
-      "firstName": "Ali",
-      "lastName": "Khan"
-    },
-    "email": "ali.khan@example.com",
-    "socketId": null,
-    "status": "inactive",
-    "vehicle": {
-      "color": "Black",
-      "plate": "ABC-123",
-      "capacity": 4,
-      "vehicleType": "car",
-      "location": {
-        "latitude": null,
-        "longitude": null
-      }
-    }
-  }
-}
-```
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-Returned when any required field fails validation.
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "value": "ab",
-      "msg": "First name must be at least 3 characters long",
-      "path": "fullName.firstName",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Duplicate Captain
-
-**Status: `400 Bad Request`**
-
-Returned when a captain with the same email already exists.
-
-```json
-{
-  "message": "captain already exist"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `201 Created` | Captain registered successfully |
-| `400 Bad Request` | Validation failed or captain already exists |
-| `500 Internal Server Error` | Unexpected database or server error |
-
-## Login User
-
-Authenticates an existing user and returns a new authentication token.
-
-### Endpoint
-
-```http
-POST /api/users/login
-```
-
-The server expects JSON in the request body:
-
-```http
-Content-Type: application/json
-```
-
-### Request Body
-
-```json
-{
-  "email": "john.doe@example.com",
-  "password": "secret123"
-}
-```
-
-### Required Data
-
-| Field | Type | Requirements |
-| --- | --- | --- |
-| `email` | string | Required; must be a valid email address |
-| `password` | string | Required; at least 6 characters |
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "token": "jwt-token",
-  "user": {
-    "_id": "user-id",
-    "fullName": {
-      "firstName": "John",
-      "lastName": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "socketId": null
-  }
-}
-```
-
-The token expires after one hour. The current controller explicitly selects the password to verify it and returns the user document in the response, so response sanitization should be added before exposing this endpoint in production.
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-Returned when the email is invalid or the password is shorter than 6 characters.
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "value": "invalid-email",
-      "msg": "Please provide a valid email",
-      "path": "email",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Invalid Credentials
-
-**Status: `401 Unauthorized`**
-
-Returned when the email does not exist or the password is incorrect.
-
-```json
-{
-  "message": "Invalid email or password"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Login successful |
-| `400 Bad Request` | Request data failed validation |
-| `401 Unauthorized` | Invalid email or password |
-| `500 Internal Server Error` | Unexpected database or server error |
-
-## Get User Profile
-
-Retrieves the authenticated user's profile information.
-
-### Endpoint
-
-```http
-GET /api/users/profile
-```
-
-### Authentication
-
-This route requires a valid JWT token. The middleware accepts either:
-
-- a cookie named `token`
-- an `Authorization` header in the format:
-
-```http
-Authorization: Bearer <jwt-token>
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "user": {
-    "_id": "user-id",
-    "fullName": {
-      "firstName": "John",
-      "lastName": "Doe"
-    },
-    "email": "john.doe@example.com",
-    "socketId": null
-  }
-}
-```
-
-### Unauthorized Responses
-
-**Status: `401 Unauthorized`**
-
-Returned if the token is missing, invalid, expired, or has been blacklisted.
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-or
-
-```json
-{
-  "message": "Invalid token"
-}
-```
-
-or
-
-```json
-{
-  "message": "Token is blacklisted"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Profile retrieved successfully |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Logout User
-
-Logs out the authenticated user by invalidating the current token.
-
-### Endpoint
-
-```http
-POST /api/users/logout
-```
-
-### Authentication
-
-This route also requires a valid JWT token in the same way as `/api/users/profile`.
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "message": "User logged out successfully"
-}
-```
-
-The server also clears the `token` cookie and stores the current token in the blacklist collection.
-
-### Unauthorized Responses
-
-**Status: `401 Unauthorized`**
-
-Returned if the token is missing, invalid, expired, or already blacklisted.
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-or
-
-```json
-{
-  "message": "Invalid token"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | User logged out successfully |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Login Captain
-
-Authenticates an existing captain and returns a new authentication token.
-
-### Endpoint
-
-```http
-POST /api/captains/login
-```
-
-The server expects JSON in the request body:
-
-```http
-Content-Type: application/json
-```
-
-### Request Body
-
-```json
-{
-  "email": "ali.khan@example.com",
-  "password": "secret123"
-}
-```
-
-### Required Data
-
-| Field | Type | Requirements |
-| --- | --- | --- |
-| `email` | string | Required; must be a valid email address |
-| `password` | string | Required; at least 6 characters |
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "token": "jwt-token",
-  "captain": {
-    "_id": "captain-id",
-    "fullName": {
-      "firstName": "Ali",
-      "lastName": "Khan"
-    },
-    "email": "ali.khan@example.com",
-    "socketId": null,
-    "status": "inactive",
-    "vehicle": {
-      "color": "Black",
-      "plate": "ABC-123",
-      "capacity": 4,
-      "vehicleType": "car",
-      "location": {
-        "latitude": null,
-        "longitude": null
-      }
-    }
-  }
-}
-```
-
-The token expires after 24 hours, and the server also sets a `token` cookie on successful login.
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-Returned when the email is invalid or the password is shorter than 6 characters.
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "value": "invalid-email",
-      "msg": "Invalid Email",
-      "path": "email",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Invalid Credentials
-
-**Status: `401 Unauthorized`**
-
-Returned when the captain email does not exist or the password is incorrect.
-
-```json
-{
-  "message": "invalid email or password"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Login successful |
-| `400 Bad Request` | Request data failed validation |
-| `401 Unauthorized` | Invalid email or password |
-| `500 Internal Server Error` | Unexpected database or server error |
-
-## Get Captain Profile
-
-Retrieves the authenticated captain's profile information.
-
-### Endpoint
-
-```http
-GET /api/captains/profile
-```
-
-### Authentication
-
-This route requires a valid JWT token. The middleware accepts either:
-
-- a cookie named `token`
-- an `Authorization` header in the format:
-
-```http
-Authorization: Bearer <jwt-token>
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "captain": {
-    "_id": "captain-id",
-    "fullName": {
-      "firstName": "Ali",
-      "lastName": "Khan"
-    },
-    "email": "ali.khan@example.com",
-    "socketId": null,
-    "status": "inactive",
-    "vehicle": {
-      "color": "Black",
-      "plate": "ABC-123",
-      "capacity": 4,
-      "vehicleType": "car",
-      "location": {
-        "latitude": null,
-        "longitude": null
-      }
-    }
-  }
-}
-```
-
-### Unauthorized Responses
-
-**Status: `401 Unauthorized`**
-
-Returned if the token is missing, invalid, expired, or already blacklisted.
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-or
-
-```json
-{
-  "message": "Invalid token"
-}
-```
-
-or
-
-```json
-{
-  "message": "Token is blacklisted"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Profile retrieved successfully |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Logout Captain
-
-Logs out the authenticated captain by invalidating the current token.
-
-### Endpoint
-
-```http
-GET /api/captains/logout
-```
-
-### Authentication
-
-This route requires a valid JWT token in the same way as `/api/captains/profile`.
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "message": "Captain logged out successfully"
-}
-```
-
-The server clears the `token` cookie and stores the token in the blacklist collection.
-
-### Unauthorized Responses
-
-**Status: `401 Unauthorized`**
-
-Returned if the token is missing, invalid, expired, or already blacklisted.
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-or
-
-```json
-{
-  "message": "Invalid token"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Captain logged out successfully |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Get Coordinates
-
-Retrieves latitude and longitude coordinates for a given address using the geocoding service.
-
-### Endpoint
-
-```http
-GET /api/maps/get-coordinates
-```
-
-### Authentication
-
-Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
-
-### Query Parameters
-
-| Parameter | Type | Requirements |
-| --- | --- | --- |
-| `address` | string | Required; at least 3 characters |
-
-### Example Request
-
-```http
-GET /api/maps/get-coordinates?address=Sheryians%20Coding%20School%20Bhopal
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "ltd": 23.259933,
-  "lng": 77.412615
-}
-```
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "value": "ab",
-      "msg": "Address is required",
-      "path": "address",
-      "location": "query"
-    }
-  ]
-}
-```
-
-### Not Found Error
-
-**Status: `404 Not Found`**
-
-```json
-{
-  "message": "Coordinates not found"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Coordinates retrieved successfully |
-| `400 Bad Request` | Invalid query parameter (address missing or shorter than 3 characters) |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `404 Not Found` | Coordinates could not be found for the given address |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Get Distance and Time
-
-Calculates driving distance and estimated travel duration between two addresses.
-
-### Endpoint
-
-```http
-GET /api/maps/get-distance-time
-```
-
-### Authentication
-
-Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
-
-### Query Parameters
-
-| Parameter | Type | Requirements |
-| --- | --- | --- |
-| `origin` | string | Required; at least 3 characters |
-| `destination` | string | Required; at least 3 characters |
-
-### Example Request
-
-```http
-GET /api/maps/get-distance-time?origin=Bhopal%20Railway%20Station&destination=DB%20City%20Mall%20Bhopal
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "distance": {
-    "text": "7.2 km",
-    "value": 7200
-  },
-  "duration": {
-    "text": "18 mins",
-    "value": 1080
-  }
-}
-```
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "msg": "Origin is required",
-      "path": "origin",
-      "location": "query"
-    }
-  ]
-}
-```
-
-### Not Found Error
-
-**Status: `404 Not Found`**
-
-```json
-{
-  "message": "Distance time not found"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Distance and duration calculated successfully |
-| `400 Bad Request` | Missing or invalid query parameters |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `404 Not Found` | Route or distance could not be determined |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Get Address Suggestions
-
-Retrieves autocomplete location suggestions matching the search query.
-
-### Endpoint
-
-```http
-GET /api/maps/get-suggestions
-```
-
-### Authentication
-
-Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
-
-### Query Parameters
-
-| Parameter | Type | Requirements |
-| --- | --- | --- |
-| `address` | string | Required; at least 3 characters |
-
-### Example Request
-
-```http
-GET /api/maps/get-suggestions?address=Sheryians
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-[
-  {
-    "name": "Sheryians Coding School, Indrapuri, Bhopal, Madhya Pradesh, India",
-    "coordinates": [77.4612, 23.2435]
-  },
-  {
-    "name": "Sheryians Coding School, MP Nagar, Bhopal, Madhya Pradesh, India",
-    "coordinates": [77.4321, 23.2312]
-  }
-]
-```
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "msg": "Address is required",
-      "path": "address",
-      "location": "query"
-    }
-  ]
-}
-```
-
-### Not Found Error
-
-**Status: `404 Not Found`**
-
-```json
-{
-  "message": "Suggestions not found"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Suggestions retrieved successfully |
-| `400 Bad Request` | Query parameter invalid or too short |
-| `401 Unauthorized` | Missing or invalid authentication |
-| `404 Not Found` | No suggestions found |
-| `500 Internal Server Error` | Unexpected server error |
-
-## Create Ride
-
-Creates a new ride request for an authenticated user, calculates the fare based on pickup and destination distance/duration, and generates a 4-digit verification OTP.
-
-### Endpoint
-
-```http
-POST /api/rides/create
-```
-
-### Authentication
-
-Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
-
-### Request Headers
-
-```http
-Content-Type: application/json
-```
-
-### Request Body
-
-```json
-{
-  "pickup": "Sheryians Coding School, Indrapuri, Bhopal",
-  "destination": "DB City Mall, MP Nagar, Bhopal",
-  "vehicleType": "car"
-}
-```
-
-### Required Data
-
-| Field | Type | Requirements |
-| --- | --- | --- |
-| `pickup` | string | Required; pickup location address |
-| `destination` | string | Required; destination location address |
-| `vehicleType` | string | Required; must be one of: `car`, `motorcycle`, `auto` |
-
-### Success Response
-
-**Status: `201 Created`**
-
-```json
-{
-  "_id": "664fa1b2e5f3982a1c4b7890",
-  "user": "664fa0a1e5f3982a1c4b7888",
-  "pickup": "Sheryians Coding School, Indrapuri, Bhopal",
-  "destination": "DB City Mall, MP Nagar, Bhopal",
-  "fare": 185,
-  "status": "pending",
-  "createdAt": "2026-09-21T18:45:00.000Z",
-  "updatedAt": "2026-09-21T18:45:00.000Z"
-}
-```
-
-*(Note: The `otp` field is generated and stored in the database with `select: false` so it is not leaked in public responses).*
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "msg": "Invalid vehicle type",
-      "path": "vehicleType",
-      "location": "body"
-    }
-  ]
-}
-```
-
-### Unauthorized Error
-
-**Status: `401 Unauthorized`**
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `201 Created` | Ride created successfully |
-| `400 Bad Request` | Missing or invalid request body fields |
-| `401 Unauthorized` | Missing or invalid authentication token |
-| `500 Internal Server Error` | Unexpected server or database error |
-
-## Get Fare
-
-Calculates the estimated fare for available vehicle types (`car`, `motorcycle`, `auto`) between pickup and destination addresses.
-
-### Endpoint
-
-```http
-GET /api/rides/get-fare
-```
-
-### Authentication
-
-Requires a valid user token in the `Authorization` header (`Bearer <token>`) or the `token` cookie.
-
-### Query Parameters
-
-| Parameter | Type | Requirements |
-| --- | --- | --- |
-| `pickup` | string | Required; pickup address |
-| `destination` | string | Required; destination address |
-
-### Example Request
-
-```http
-GET /api/rides/get-fare?pickup=Sheryians%20Coding%20School%20Bhopal&destination=DB%20City%20Mall%20Bhopal
-```
-
-### Success Response
-
-**Status: `200 OK`**
-
-```json
-{
-  "auto": 118,
-  "car": 193,
-  "motorcycle": 65
-}
-```
-
-### Validation Error
-
-**Status: `400 Bad Request`**
-
-```json
-{
-  "errors": [
-    {
-      "type": "field",
-      "msg": "Pickup location is required",
-      "path": "pickup",
-      "location": "query"
-    }
-  ]
-}
-```
-
-### Unauthorized Error
-
-**Status: `401 Unauthorized`**
-
-```json
-{
-  "message": "Unauthorized"
-}
-```
-
-### Status Codes
-
-| Status code | Meaning |
-| --- | --- |
-| `200 OK` | Fare calculated successfully |
-| `400 Bad Request` | Missing or invalid query parameters |
-| `401 Unauthorized` | Missing or invalid authentication token |
-| `500 Internal Server Error` | Unexpected server or routing error |
-
-
+## 👤 Author
+ 
+**Mayur**
+ 
+- GitHub: (https://github.com/AD202200651673)
